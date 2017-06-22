@@ -39,13 +39,13 @@ INSERT INTO category (id, description) VALUES (2, 'Kućanski poslovi');
 
 INSERT INTO category (id, description) VALUES (3, 'Komunalne usluge');
 
-INSERT INTO category (id, description) VALUES (4, 'Nekategorizirano:');
+INSERT INTO category (id, description) VALUES (4, 'Nekategorizirano');
 
 
 
 
 INSERT INTO bill (id, user_id, group_id, title, price, date_created, last_update_date, description, category_id) 
-VALUES(1, 1, 1, 'Ćišćenje wc-a', 0, CURRENT_DATE()-2, NULL, 'Volim cistit',  2);
+VALUES(1, 1, 1, 'Čišćenje wc-a', 0, CURRENT_DATE()-2, NULL, 'Volim cistit',  2);
 
 
 INSERT INTO bill (id, user_id, group_id, title, price, date_created, last_update_date, description, category_id) 
@@ -53,5 +53,5 @@ VALUES(2, 2, 1, 'Kruh', 8.5, CURRENT_DATE()-2, NULL, 'Kupio kruh',  1);
 
 
 INSERT INTO bill (id, user_id, group_id, title, price, date_created, last_update_date, description, category_id) 
-VALUES(3, 2, 1, 'Režije', 250, CURRENT_DATE(), NULL, 'Platio struju',  3);
+VALUES(3, 2, 1, 'Režije', 250, CURRENT_DATE()+20, NULL, 'Platio struju',  3);
 

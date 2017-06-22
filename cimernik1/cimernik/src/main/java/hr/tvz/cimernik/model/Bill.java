@@ -49,7 +49,7 @@ public class Bill implements Serializable {
 	@Getter
 	@Setter
 	private RoomateGroup roomateGroup;
-	
+
 	@Getter
 	@Setter
 	private String title;
@@ -60,17 +60,17 @@ public class Bill implements Serializable {
 	@Getter
 	@Setter
 
-	@Column(name="date_created")
+	@Column(name = "date_created")
 	private Date dateCreated;
 
 	@Temporal(TemporalType.DATE)
 	@Getter
 	@Setter
-	@Column(name="last_update_date")
+	@Column(name = "last_update_date")
 	private Date lastUpdateDate;
 	@Getter
 	@Setter
-	
+
 	private String description;
 
 	@ManyToOne(fetch = FetchType.EAGER)
@@ -78,5 +78,24 @@ public class Bill implements Serializable {
 	@Getter
 	@Setter
 	private Category category;
+
+	public Bill(User user, RoomateGroup roomateGroup, String title, BigDecimal price, Date dateCreated,
+			String description, Category category) {
+		this.user = user;
+		this.roomateGroup = roomateGroup;
+		this.title = title;
+		this.price = price;
+		this.dateCreated = dateCreated;
+		this.description = description;
+		this.category = category;
+	}
+
+	/*
+	 * @Transient
+	 * 
+	 * @Getter
+	 * 
+	 * @Setter private Integer month;
+	 */
 
 }

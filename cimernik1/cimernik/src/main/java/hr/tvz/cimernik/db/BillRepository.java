@@ -15,5 +15,8 @@ import hr.tvz.cimernik.model.User;
 public interface BillRepository extends JpaRepository<Bill, Integer> {
 	List<Bill> findAllByUser(User user);
 	List<Bill> findAllByRoomateGroup(RoomateGroup rg);
+
+
+	List<Bill> findAllByUserAndCategoryDescription(User user, String description);
 }
 

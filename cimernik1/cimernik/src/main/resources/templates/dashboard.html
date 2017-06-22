@@ -1,135 +1,172 @@
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml"
-	xmlns:th="http://www.thymeleaf.org">
-
+	xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	layout:decorator="layout">
 <head>
-<title>Dashboard</title>
-<meta charset="UTF-8"></meta>
-<!-- 
-<link rel="stylesheet" type="text/css" th:href="@{/static/bootstrap.css}" ></link>
--->
-<!-- Latest compiled and minified CSS -->
-<link rel="stylesheet"
-	href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"></link>
+<meta charset="UTF-8" />
+<title>Cimernik</title>
 
-<!-- Optional theme -->
-<link rel="stylesheet"
-	href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css"></link>
+<th:block th:replace="fragments :: css"></th:block>
 
-<!-- Latest compiled and minified JavaScript -->
-<script
-	src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+
+
 </head>
 <body>
-
-	<nav class="navbar navbar-default navbar-fixed-top">
-		<div class="container-fluid">
-			<div class="navbar-header">
-				<button type="button" class="navbar-toggle collapsed"
-					data-toggle="collapse" data-target="#navbar" aria-expanded="false"
-					aria-controls="navbar">
-					<span class="sr-only">Toggle navigation</span> <span
-						class="icon-bar"></span> <span class="icon-bar"></span> <span
-						class="icon-bar"></span>
-				</button>
-				<a class="navbar-brand" th:href="@{/}"> Cimernik<!-- <img alt="Brand"
-						th:src="@{/images/index_brand.png}" /> -->
-				</a>
-			</div>
-			<div id="navbar" class="navbar-collapse collapse">
-				
-				<ul class="nav navbar-nav navbar-right">
-
-					<li><th:block th:text="${userCredentials} "></th:block>
-						<form th:action="@{/logout}" method="POST">
-							<input type="submit" class="btn btn-primary" value="Odjava" />
-						</form></li>
+	<div layout:fragment="content">
 
 
-				</ul>
-			</div>
-		</div>
-	</nav>
 
+		<div th:if="!${groupExists}">
 
-	<div class="container" style="margin-top: 100px;">
-		<div class="alertBox">
-			<p th:classappend="${noGroup} !=null ? alert-warning : hidden"
-				class="alert" th:text="${noGroup}"></p>
-		</div>
-		<div class="panel">
+			<h2>Još nemaš grupu?</h2>
+			<h3>Napravi grupu cimera!</h3>
+			<form id="group" th:action="@{/group}" method="post"
+				th:object="${roomateGroup}">
+				<div class="panel panel-default">
+					<div class="panel-body">
+						<div class="col-xs-12 col-sm-4 col-md-4">
+							<div class="form-group">
+								<label for="name">Naziv grupe:</label> <input type="text"
+									oninvalid="this.setCustomValidity('Naziv grupe mora biti upisan!')"
+									oninput="setCustomValidity('')" class="form-control"
+									th:required="required" name="name" id="name"
+									th:autofocus="autofocus" />
 
+							</div>
+						</div>
+						<div class="col-xs-12 col-sm-4 col-md-4">
+							<div class="form-group" id="members">
+								<label>Članovi grupe:</label> <input type="text" name="member[]"
+									class="form-control" /> <input type="text" name="member[]"
+									class="form-control" /> <input type="text" name="member[]"
+									class="form-control" />
+							</div>
+						</div>
+					</div>
+					<div class="panel-footer clearfix">
 
-			<div th:class="${noGroup} != null ? show : hidden">
-				<p>Još nemaš grupu?</p>
-				<a th:href="@{/newGroup}">
-					<button class="btn btn-info">Napravi grupu cimera</button>
-				</a>
-			</div>
-			<div class="row">
-				<div class="col-md-8">
-					<h1 th:text="${group.name}"></h1>
-					<a th:href="@{/newBill}">
-						<button class="btn btn-success">Dodaj novi račun</button>
-					</a> <a th:href="@{/settleBills}">
-						<button class="btn btn-info">Izravnaj račune</button>
-					</a>
+						<button type="button" class="btn btn-primary" data-toggle="modal"
+							data-target="#myModal">
+							<i class="fa fa-save" aria-hidden="true"></i> Spremi
+						</button>
+
+						<div
+							th:replace="fragments :: alertModal(header='Spremanje grupe', 
+			message='Jeste li sigurni da želite spremiti grupu?',
+			confirmLabel='Spremi',
+			cancelLabel='Odustani')"></div>
+
+					</div>
 				</div>
+
+
+			</form>
+		</div>
+
+		<div th:if="${groupExists}">
+			<div class="alert alert-warning alert-dismissable">
+				<a href="#" class="close" data-dismiss="alert" aria-label="close">×</a>
+				Ima grupu, prikazati linkove na članove?
 			</div>
-
-
-			<h2 th:text="${'Svi troškovi i aktivnosti'}"></h2>
-
-
-			<div th:class="${noMembers} != null ? show : hidden">
-				<p>Još nemaš cimere?</p>
-				<a th:href="@{/addMembers}">
-					<button class="btn btn-info">Dodaj cimere u grupu</button>
-				</a>
-			</div>
-
 
 
 			<div class="row">
-				<div class="col-xs-12 col-sm-12 col-md-8 col-lg-8">
-					<table class="table table-striped table-hover">
-						<tbody>
-							<tr th:each="bill : ${groupBills}">
-								<td>
-									<h2 th:text="${#dates.format(bill.dateCreated, 'dd.MM.YYYY.')}"></h2>
-								</td>
-								<td><a class="h4 hidden-xs" th:text="${bill.title}"
-									th:href="@{/bills/{id}(id=${bill.id}) }"></a> <a
-									class=" hidden-sm h4 hidden-md hidden-lg hidden-xl"
-									th:text="${bill.title}"></a> <br></br>
-									<p class="label label-info"
-										th:text="${bill.category.getDescription()}"></p> <span
-									class="hidden-xs" th:text="${bill.price}+ ' kn'"></span>
-									<p class="hidden-xs" th:text="'By: ' + ${bill.user.username}"></p>
-								</td>
-								<td>
-								<a th:href="@{/deleteBill/{id}(id=${bill.id}) }">OBRISI</a>
-								
-								</td>
-							</tr>
-						</tbody>
-					</table>
+				<div class="col-md-3">
+					<ul class="nav navbar nav-pills nav-stacked flex-column">
+						<li class="nav-item"><a th:href="@{/dashboard}"
+							class="active nav-link">Svi računi grupe</a></li>
+						<li class="nav-item"><a th:href="@{/bills}" class="nav-link">Moji
+								računi</a></li>
+
+						<li class="nav-item"><a th:href="@{/settleBills}"
+							class="btn btn-warning"> Izravnaj račune </a></li>
+
+					</ul>
+					<p th:text="'Potrošio ovaj mjesec: ' + ${monthExpense} + ' kn'"></p>
 				</div>
-				<div class="col-xs-12 col-sm-12 col-md-4 col-lg-4">
-					<a th:href="@{/myBills}">
-						<button class="btn btn-info">Moji troškovi</button>
-					</a>
+
+
+
+				<div id="accordion" role="tablist" aria-multiselectable="true"
+					class="col-md-8">
+					<div class="row">
+						<h1 class="h2 col-md-9">
+							<small>Svi troškovi grupe </small><b th:text="${group.name}"></b>
+						</h1>
+						<a th:href="@{/newBill}" class="btn btn-success col-md-3">
+							Dodaj novi račun </a>
+					</div>
+
+					<br></br>
+					<div th:if="!${groupBillsExists}">
+						<div class="alert alert-warning alert-dismissable">
+							<a href="#" class="close" data-dismiss="alert" aria-label="close">×</a>
+							U grupi nema nijednog računa.
+						</div>
+					</div>
+					<div class="card" th:each="bill : ${groupBills}">
+						<div class="card-header" role="tab" th:attr="id=${bill.title}">
+
+							<div>
+								<div class="row media">
+									<div class="col-md-3 media-left">
+										<span class="badge badge-default media-object"
+											th:text="${#dates.format(bill.dateCreated, 'dd.MM.YYYY.')}"></span>
+
+									</div>
+									<div class="media-body row">
+										<div class="col-md-10">
+											<h4 class="mb-0">
+												<a class="hidden-xs" data-toggle="collapse"
+													data-parent="#accordion" aria-expanded="true"
+													th:attr="aria-controls='collapse'+ ${bill.id}, href='#'+'collapse' +
+											${bill.id}"
+													th:text="${bill.title}"></a>
+											</h4>
+											<p>
+												By <b th:text="${bill.user.username}"></b>
+											</p>
+										</div>
+										<div class="col-md-2" style="margin-top: 15px">
+											<a th:href="@{/deleteBill/{id}(id=${bill.id}) }"><i
+												class="fa fa-trash" aria-hidden="true"
+												style="font-size: 2em;"></i> </a>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+
+						<div
+							th:attr="id='collapse'+ ${bill.id},aria-labeledby=${bill.title}"
+							class="collapse" role="tabpanel">
+							<div class="card-block">
+								<h4 th:text="${bill.title}"></h4>
+								<small
+									th:text="${#dates.format(bill.dateCreated, 'dd.MM.YYYY.')}"></small>
+								<span class="badge badge-info media-object"
+									th:text="${bill.category.getDescription()}"></span>
+								<p class="hidden-xs" th:text="${bill.price}+ ' kn'"></p>
+								<p class="hidden-xs" th:text="${bill.description}"></p>
+								<p>
+									Račun napravio: <b th:text="${bill.user.username}"></b>
+								</p>
+							</div>
+						</div>
+					</div>
 				</div>
+
 			</div>
-
-
-
-
-
-
-
 		</div>
+
 	</div>
+	<th:block layout:fragment="additionalScripts">
+
+
+	</th:block>
+
 
 </body>
 </html>

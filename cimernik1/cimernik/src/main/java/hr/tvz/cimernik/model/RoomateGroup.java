@@ -43,8 +43,9 @@ public class RoomateGroup implements Serializable {
 	@OneToMany(mappedBy="roomateGroup",fetch=FetchType.EAGER) 
 	private List<User> members;
 
-	public RoomateGroup(String name){
+	public RoomateGroup(String name, List<User> members){
 		this.name =  name;
+		this.members = members;
 	}
 	
 }
