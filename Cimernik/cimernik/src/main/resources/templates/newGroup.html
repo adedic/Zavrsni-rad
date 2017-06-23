@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:th="http://www.thymeleaf.org">
+
+<head>
+<title>Nova grupa</title>
+<meta charset="UTF-8"></meta>
+<!-- 
+<link rel="stylesheet" type="text/css" th:href="@{/static/bootstrap.css}" ></link>
+-->
+<!-- Latest compiled and minified CSS -->
+<link rel="stylesheet"
+	href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"></link>
+
+<!-- Optional theme -->
+<link rel="stylesheet"
+	href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css"></link>
+
+</head>
+<body>
+
+	<nav class="navbar navbar-default ">
+		<div class="container-fluid">
+			<!-- Brand and toggle get grouped for better mobile display -->
+			<div class="navbar-header">
+				<button type="button" class="navbar-toggle collapsed"
+					data-toggle="collapse" data-target="#bs-example-navbar-collapse-1"
+					aria-expanded="false">
+					<span class="sr-only">Toggle navigation</span> <span
+						class="icon-bar"></span> <span class="icon-bar"></span> <span
+						class="icon-bar"></span>
+				</button>
+				<a class="navbar-brand" th:href="@{/dashboard}">Cimernik</a>
+			</div>
+
+			<!-- Collect the nav links, forms, and other content for toggling -->
+			<div class="collapse navbar-collapse"
+				id="bs-example-navbar-collapse-1">
+
+
+				<ul class="nav navbar-nav navbar-right">
+					<li><b th:text="${userCredentials}"></b></li>
+					<li>
+						<form th:action="@{/logout}" method="POST">
+							<input type="submit" value="Odjava" />
+						</form>
+					</li>
+
+				</ul>
+			</div>
+			<!-- /.navbar-collapse -->
+		</div>
+		<!-- /.container-fluid -->
+	</nav>
+
+	<div class="container">
+
+		<form id="new_group" th:action="@{/newGroup}" method="post" th:object="${roomateGroup}">
+			<h3>Napravi novu grupu</h3>
+			<div class="form-group row">
+				<div class="col-sm-5">
+					<label class="h1" for="group_ name"
+						style="line-height: 140%; font-weight: normal;">Moja grupa
+						će se zvati&hellip;</label> <input th:field="*{name}"
+						tabindex="1"
+						placeholder="Najbolji cimeri ikad" class="form-control col-sm-4"
+						autocomplete="off" autofocus="autofocus"
+						style="font-size: 32px; height: 42px;" type="text"
+						name="group_name" id="group_name" />
+				</div>
+			</div>
+			<div class="form-group">
+				<input type="text" name="member[]" class="form-control"/>
+				<input type="text" name="member[]" class="form-control"/>
+				<input type="text" name="member[]" class="form-control"/>
+			</div>
+			<div class="form-group">
+				<input type="submit" class="btn btn-primary" name="saveButton"
+					value="Spremi" />
+			</div>
+		</form>
+	</div>
+	
+<!-- Latest compiled and minified JavaScript -->
+<script
+	src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+</body>
+</html>

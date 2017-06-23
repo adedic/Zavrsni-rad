@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	layout:decorator="layout">
+<head>
+<meta charset="UTF-8" />
+<title>Cimernik</title>
+
+<th:block th:replace="fragments :: css"></th:block>
+
+
+
+
+</head>
+<body>
+	<div layout:fragment="content">
+
+
+		<div class="container">
+			<div class="row">
+				<div class="col-md-3">
+					<ul class="nav navbar nav-pills nav-stacked flex-column">
+						<li class="active nav-item"><a th:href="@{/dashboard}"
+							class="nav-link">Svi troškovi grupe</a></li>
+						<li class="nav-item"><a th:href="@{/myBills}"
+							class="nav-link">Moji troškovi</a></li>
+						<li class="nav-item"><a href="#" class="nav-link">Moja
+								grupa</a></li>
+					</ul>
+				</div>
+
+
+
+				<div id="accordion" role="tablist" aria-multiselectable="true"
+					class="col-md-8">
+					<div class="row">
+						<h1 class="h2 col-md-9">
+							<small>Svi troškovi grupe </small><b th:text="${group.name}"></b>
+						</h1>
+						<a th:href="@{/newBill}" class="col-md-3">
+							<button class="btn btn-success">Dodaj novi račun</button>
+						</a>
+					</div>
+
+					<br></br>
+
+					<div class="card" th:each="bill : ${groupBills}">
+						<div class="card-header" role="tab" th:attr="id=${bill.title}">
+
+							<div>
+								<div class="row media">
+									<div class="col-md-3 media-left">
+										<span class="badge badge-default media-object"
+											th:text="${#dates.format(bill.dateCreated, 'dd.MM.YYYY.')}"></span>
+
+									</div>
+									<div class="media-body row">
+										<div class="col-md-10">
+											<h4 class="mb-0">
+												<a class="hidden-xs" data-toggle="collapse"
+													data-parent="#accordion" aria-expanded="true"
+													th:attr="aria-controls='collapse'+ ${bill.id}, href='#'+'collapse' +
+											${bill.id}"
+													th:text="${bill.title}"></a>
+											</h4>
+											<p>
+												By <b th:text="${bill.user.username}"></b>
+											</p>
+										</div>
+										<div class="col-md-2" style="margin-top: 15px">
+											<a th:href="@{/deleteBill/{id}(id=${bill.id}) }"><i
+												class="fa fa-trash" aria-hidden="true"
+												style="font-size: 2em;"></i> </a>
+										</div>
+
+
+
+
+
+									</div>
+
+								</div>
+
+
+
+							</div>
+
+
+						</div>
+
+						<div
+							th:attr="id='collapse'+ ${bill.id},aria-labeledby=${bill.title}"
+							class="collapse" role="tabpanel">
+							<div class="card-block">
+								<h4 th:text="${bill.title}"></h4>
+								<small
+									th:text="${#dates.format(bill.dateCreated, 'dd.MM.YYYY.')}"></small>
+								<span class="badge badge-info media-object"
+									th:text="${bill.category.getDescription()}"></span>
+								<p class="hidden-xs" th:text="${bill.price}+ ' kn'"></p>
+								<p class="hidden-xs" th:text="${bill.description}"></p>
+								<p>
+									Račun napravio: <b th:text="${bill.user.username}"></b>
+								</p>
+							</div>
+						</div>
+					</div>
+				</div>
+
+			</div>
+
+		</div>
+	</div>
+	<th:block layout:fragment="additionalScripts">
+
+
+	</th:block>
+
+
+</body>
+</html>

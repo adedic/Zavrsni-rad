@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:th="http://www.thymeleaf.org"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+<meta charset="UTF-8" />
+<!-- 
+<link rel="shortcut icon" th:href="@{/favicon.ico}" />
+<title layout:title-pattern="$CONTENT_TITLE - $DECORATOR_TITLE"
+	th:text="#{staza}"></title>
+	 -->
+<th:block th:include="fragments :: css"></th:block>
+</head>
+<body>
+	<div id="spinner"></div>
+	<div th:replace="fragments :: header"></div>
+	
+	<!-- Content container -->
+	<div class="container" layout:fragment="content"></div>	
+	
+	<div th:replace="fragments :: footer"></div>
+	<div th:replace="fragments :: scripts"></div>
+	
+	<!-- Additional scripts -->
+	<div layout:fragment="additionalScripts"></div>
+</body>
+</html>

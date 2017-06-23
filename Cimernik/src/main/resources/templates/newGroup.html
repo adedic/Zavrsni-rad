@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	layout:decorator="layout">
+<head>
+<meta charset="UTF-8" />
+<title>Nova grupa</title>
+
+<th:block th:replace="fragments :: css"></th:block>
+
+</head>
+<body>
+	<div layout:fragment="content">
+
+
+		<h3>Napravi grupu cimera</h3>
+		
+		<h4>Ili nađi grupu svojih cimera koristeći se tražilicom</h4>
+		<form id="group" th:action="@{/group}" method="post"
+			th:object="${roomateGroup}">
+
+			<div class="panel panel-default">
+				<div class="panel-body">
+					<div class="col-xs-12 col-sm-4 col-md-4">
+						<div th:class="form-group"
+							th:classappend="${#fields.hasErrors('name')} ? has-danger : ''">
+							<label for="name">Naziv grupe:</label>
+							<input type="text" class="form-control form-control-danger"
+								th:field="*{name}" th:autofocus="autofocus" id="name"
+								th:placeholder="'Ime grupe'" />
+							<div class="form-control-feedback"
+								th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></div>
+						</div>
+					</div>
+					<div class="col-xs-12 col-sm-4 col-md-4">
+						<div th:class="form-group"
+							th:classappend="${errorText} != null ? has-danger : ''">
+							<label>Članovi
+								grupe:</label> <input type="text"
+								th:placeholder="'Korisničko ime cimera'" name="member[]"
+								id="member1" class="form-control form-control-danger" />
+							<div class="form-control-feedback" th:if="${errorText} != null"
+								th:text="${errorText}"></div>
+							<input type="text" th:placeholder="'Korisničko ime cimera'"
+								name="member[]" id="member2" class="form-control form-control-danger" />
+							<div class="form-control-feedback" th:if="${errorText} != null"
+								th:text="${errorText}"></div>
+
+
+						</div>
+					</div>
+				</div>
+
+				<div class="panel-footer clearfix">
+					<button type="button" class="btn btn-primary" data-toggle="modal"
+						data-target="#myModal">
+						<i class="fa fa-save" aria-hidden="true"></i> Spremi
+					</button>
+
+					<div
+						th:replace="fragments :: alertModal(header='Spremanje grupe', 
+			message='Jeste li sigurni da želite spremiti grupu?',
+			confirmLabel='Spremi',
+			cancelLabel='Odustani')"></div>
+
+				</div>
+			</div>
+
+
+		</form>
+	</div>
+	<th:block layout:fragment="additionalScripts">
+
+	</th:block>
+</body>
+</html>

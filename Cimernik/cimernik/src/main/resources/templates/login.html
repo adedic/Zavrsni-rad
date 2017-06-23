@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:th="http://www.thymeleaf.org">
+<head>
+
+<meta charset="UTF-8"></meta>
+<title>Prijava</title>
+<!-- 
+<link rel="stylesheet" type="text/css" th:href="@{/static/bootstrap.css}" ></link>
+-->
+<!-- Latest compiled and minified CSS -->
+<link rel="stylesheet"
+	href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"></link>
+
+<!-- Optional theme -->
+<link rel="stylesheet"
+	href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css"></link>
+
+<!-- Latest compiled and minified JavaScript -->
+<script
+	src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+</head>
+ 	
+<body>
+	<div class="container" style="padding-top:20vh;">
+		<div class="row">
+			<div class="col-md-4 col-md-offset-4">
+				<div class="panel panel-default">
+					<div class="panel-heading">
+						<h3 class="panel-title">Prijava korisnika</h3>
+					</div>
+					<div class="panel-body">
+						<p style="color:green" th:text="${logoutPoruka}" ></p>
+						<p style="color:red"  th:text="${errorPoruka}" ></p>
+						
+						<form role="form" method="POST" name="formLogin"  th:action='@{/login}'>
+							<fieldset>
+								<div class="form-group">
+									<input class="form-control"  autofocus="autofocus" required="required" placeholder="Korisničko ime" name="username"
+										type="text"/>
+								</div>
+								<div class="form-group">
+									<input class="form-control" required="required"  placeholder="Lozinka"
+										name="password" type="password" value=""/>
+								</div>
+								
+								<input class="btn btn-lg btn-success btn-block" type="submit"
+									value="Prijava"/>
+							</fieldset>
+						</form>
+						
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+</html>
