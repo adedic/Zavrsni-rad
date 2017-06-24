@@ -58,9 +58,11 @@
 				<div class="col-md-3">
 					<div class="list-group">
 						<a th:href="@{/group/dashboard}"
-							class="list-group-item list-group-item-action active">Troškovi
-							grupe</a> <a th:href="@{/group/bills/{id}(id=${user.id})}"
-							class="list-group-item list-group-item-action">Moji troškovi</a>
+							class="list-group-item list-group-item-action active"><i
+							class="fa fa-list" aria-hidden="true"><span>Troškovi
+								grupe</span></i></a> <a th:href="@{/group/bills/{id}(id=${user.id})}"
+							class="list-group-item list-group-item-action">Moji
+								troškovi</a>
 
 					</div>
 
@@ -81,10 +83,12 @@
 					<ul class="nav navbar nav-pills nav-stacked flex-column">
 						<li class="nav-item" th:each="member : ${members}"><a
 							th:if="${member.username != user.username}"
-							th:href="@{/group/bills/{id}(id=${member.id})}" class="nav-link"
-							th:text="${member.getCredentials()}"> </a></li>
+							th:href="@{/group/bills/{id}(id=${member.id})}" class="nav-link"><i
+								class="fa fa-user" aria-hidden="true"></i> <span
+								th:text="${member.getCredentials()}"></span> </a></li>
 						<li class="nav-item"><a th:href="@{/members/new}"><i
-								class="fa fa-plus" aria-hidden="true"></i> Dodaj cimera </a></li>
+								class="fa fa-plus" aria-hidden="true"></i> <span>Dodaj
+									cimera </span></a></li>
 					</ul>
 				</div>
 

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	layout:decorator="layout">
+<head>
+<meta charset="UTF-8" />
+<title>Cimernik - grupe</title>
+
+<th:block th:replace="fragments :: css"></th:block>
+
+</head>
+<body>
+	<div layout:fragment="content">
+		<div th:if="${groups.isEmpty()}">
+				<div class="alert alert-warning alert-dismissable">
+					<a href="#" class="close" data-dismiss="alert" aria-label="close">×</a>
+					Nema rezultata za taj upit. Pokušaj ponovno.
+				</div>
+			</div>
+		<div class="card" style="width: 60rem;" th:each="group : ${groups}">
+			<div class="card-block">
+				<h2 class="card-title" th:text="${group.name}"></h2>
+			</div>
+			<div class="card-block">
+				<h3>Članovi grupe:</h3>
+				<ul class="list-unstyled" th:each="m : ${group.members}">
+					<li th:text="${m.getCredentials()}"></li>
+				</ul>
+			</div>
+			<div class="card-block">
+				<a href="#"><i class="fa fa-sign-in" aria-hidden="true"></i>
+					Priduži se grupi</a>
+			</div>
+		</div>
+
+
+		<!--  
+					<li class="nav-item" th:each="member : ${members}"><p
+							class="nav-link"
+							th:text="${member.getCredentials()}"></p></li>
+							-->
+
+
+	</div>
+	<th:block layout:fragment="additionalScripts">
+	</th:block>
+
+
+</body>
+</html>

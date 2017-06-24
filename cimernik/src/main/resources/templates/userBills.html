@@ -22,7 +22,8 @@
 			<div class="col-md-3">
 				<div class="list-group">
 					<a th:href="@{/group/dashboard}"
-						class="list-group-item list-group-item-action">Troškovi grupe</a>
+						class="list-group-item list-group-item-action"><i class="fa fa-list" aria-hidden="true"></i>
+						Troškovi grupe</a>
 					<a th:href="@{/group/bills/{id}(id=${user.id})}"
 						class="list-group-item list-group-item-action active">
 						<span th:if="!${isRoomate}">Moji
@@ -35,7 +36,7 @@
 			<div id="accordion" role="tablist" aria-multiselectable="true"
 				class="col-md-8">
 				<div class="row">
-					<h1 class="h2 col-md-9">
+					<h1 class="h2 col-md-9"> 	
 						<small th:text="${user.getCredentials()}"> </small>
 					</h1>
 					<div th:if="!${isRoomate}">

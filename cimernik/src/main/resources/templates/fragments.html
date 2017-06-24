@@ -33,20 +33,31 @@
 
 			<div class="collapse navbar-collapse" id="navbarSupportedContent">
 
-				<form class="form-inline my-2 my-lg-0">
-					<input class="form-control mr-sm-2" type="text"
-						placeholder="Pronađi grupu cimera" />
-					<button class="btn btn-outline-success my-2 my-sm-0" type="submit">Traži</button>
-				</form>
+				<div th:if="!${groupExists}">
+					<form class="form-inline my-2 my-lg-0" id="groupSearch"
+						th:action="@{/group/search}" method="post"
+						th:object="${roomateGroup}">
+						<div th:class="form-group">
+							<input class="form-control form-control-danger mr-sm-2"
+								oninvalid="this.setCustomValidity('Upiši ime grupe!')"
+								oninput="setCustomValidity('')" type="text"
+								th:autofocus="autofocus"
+								placeholder="&#xf002; Pronađi grupu cimera "
+								style="font-family: Arial, FontAwesome;" th:required="required"
+								name="name" id="name" />
+
+						</div>
+					</form>
+				</div>
 
 				<ul class="nav navbar-nav ml-auto">
 					<li class="nav-item">
 						<form th:action="@{/logout}" id="logout_form" method="post"
-							style="display: none;"></form>
-						<a class="nav-link" href="javascript:{}"
-							onclick="document.getElementById('logout_form').submit(); return false;">
+							style="display: none;"></form> <a class="nav-link"
+						href="javascript:{}"
+						onclick="document.getElementById('logout_form').submit(); return false;">
 							Odjava (<th:block th:text="${#authentication.name}"></th:block>)
-						</a>
+					</a>
 					</li>
 				</ul>
 

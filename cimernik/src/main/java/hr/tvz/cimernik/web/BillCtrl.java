@@ -9,8 +9,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.SessionAttributes;
+import org.springframework.web.bind.annotation.RequestAttribute;
 
 import hr.tvz.cimernik.db.BillRepository;
 import hr.tvz.cimernik.db.CategoryRepository;
@@ -20,7 +19,6 @@ import hr.tvz.cimernik.model.Bill;
 import hr.tvz.cimernik.model.User;
 
 @Controller
-@SessionAttributes({ "bill" })
 public class BillCtrl {
 	@Autowired
 	UserRepository userRepository;
@@ -31,8 +29,8 @@ public class BillCtrl {
 	@Autowired
 	CategoryRepository categoryRepository;
 
-	@GetMapping("bill/new")
-	String addNewBill(Model model, Principal principal) {
+	@GetMapping("/bill/new")
+	String showFormAddBill(Model model, Principal principal) {
 
 		model.addAttribute("date");
 		model.addAttribute("bill", new Bill());
@@ -41,14 +39,14 @@ public class BillCtrl {
 		return "newBill";
 	}
 
-	@PostMapping("bill/new")
-	public String handleForm(Model model, @ModelAttribute Bill bill, Principal principal) {
-		
+	@PostMapping("/bill/new")
+	public String addNewBill(Model model,@RequestAttribute @ModelAttribute Bill bill, Principal principal) {
+
 		User user = userRepository.findOneByUsername(principal.getName());
 		bill = new Bill(user, user.getRoomateGroup(), bill.getTitle(), bill.getPrice(), bill.getDateCreated(),
 				bill.getDescription(), bill.getCategory());
 		System.out.println(bill.getTitle());
-		
+
 		billRepository.save(bill);
 
 		return "redirect:/group/dashboard";
@@ -58,10 +56,10 @@ public class BillCtrl {
 	@GetMapping("/deleteBill/{id}")
 	String deleteBill(@PathVariable Integer id, Model model, Principal principal) {
 		billRepository.delete(billRepository.findOne(id));
-		
+
 		Integer userId = userRepository.findOneByUsername(principal.getName()).getId();
-		System.out.println("userid" +userId.toString());
-		return "redirect:/group/bills/"+userId+"?deleteSuccess=true";
+		System.out.println("userid" + userId.toString());
+		return "redirect:/group/bills/" + userId + "?deleteSuccess=true";
 	}
 
 }

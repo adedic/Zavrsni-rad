@@ -42,7 +42,8 @@ public final class MainCtrl {
 	BillRepository billRepository;
 	@Autowired
 	CategoryRepository categoryRepository;
-
+	
+	
 	// svi računi korisnika
 	@GetMapping("/bills/{id}")
 	String showUserBills(@PathVariable Integer id, Model model, Principal principal,
@@ -178,13 +179,21 @@ public final class MainCtrl {
 		}
 		return "newGroup";
 	}
+	
+	@PostMapping("/search")
+	String findGroup(Model model, Principal principal, @RequestParam("name") String name){
+		List<RoomateGroup> groups = groupRepository.findAll().stream().filter(g -> g.getName().toLowerCase().contains(name.toLowerCase())).collect(Collectors.toList());
+	
+		model.addAttribute("groups",groups);
+		
+		
+		return "groups";
+	}
 
 	@PostMapping("/new")
 	String saveGroup(Model model, Principal principal, @RequestParam("member[]") List<String> userStrings,
 			@Valid @ModelAttribute("roomateGroup") RoomateGroup roomateGroup, BindingResult bindingResult) {
 		boolean error = bindingResult.hasErrors();
-		String errorText = "";
-
 		List<User> members = new ArrayList<>();
 		members.add(userRepository.findOneByUsername(principal.getName()));
 

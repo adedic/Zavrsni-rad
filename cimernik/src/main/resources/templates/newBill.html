@@ -13,81 +13,76 @@
 <body>
 	<div layout:fragment="content">
 
-		<h3>
-			Novi račun <span class="h4"
-				th:text="${'za ' + #dates.format(#dates.createNow(), 'dd.MM.YYYY.')}"></span>
-		</h3>
-
-		<br></br>
-		<form id="billForm" method="POST" th:object="${bill}"
-			th:action="@{/bill/new}">
-
-			<input type="hidden" class="form-control" name="dateCreated"
-				id="dateCreated"
-				th:value="${#dates.format(#dates.createNow(), 'dd.MM.YYYY.')}" />
-
-
+		<form id="bill" th:action="@{/bill/new}" method="post"
+			th:object="${bill}">
 			<div class="panel panel-default">
+				<div class="panel-heading">
+					<h2>
+						Novi račun <span class="h4"
+							th:text="${'za ' + #dates.format(#dates.createNow(), 'dd.MM.YYYY.')}"></span>
+					</h2>
+				</div>
+				<br></br>
 				<div class="panel-body">
+					<input type="hidden" class="form-control" name="dateCreated"
+						id="dateCreated"
+						th:value="${#dates.format(#dates.createNow(), 'dd.MM.YYYY.')}" />
+
 					<div class="col-xs-12 col-sm-4 col-md-4">
-						<div class="form-group" id="categoriesSelect">
+						<div th:class="form-group"
+							th:classappend="${errorText} != null ? has-danger : ''">
 							<label for="category">Kategorija: </label> <select id="category"
-								name="category" class="form-control" th:autofocus="autofocus">
+								th:field="*{category}" class="form-control form-control-danger"
+								th:autofocus="autofocus">
 								<option th:each="c : ${categories}" th:value="${c.id}"
 									th:text="${c.description}"></option>
 							</select>
+							<div class="form-control-feedback" th:if="${errorText} != null"
+								th:text="${errorText}"></div>
 						</div>
 					</div>
+
+
 					<div class="col-xs-12 col-sm-4 col-md-4">
-						<div class="form-group">
+						<div th:class="form-group"
+							th:classappend="${errorText} != null ? has-danger : ''">
 							<label for="title">Naslov:</label> <input type="text"
-								oninvalid="this.setCustomValidity('Naslov mora biti upisan!')"
-								oninput="setCustomValidity('')" class="form-control"
-								th:required="required" th:value="${title}" id="title"
-								th:field="*{title}" />
-
+								class="form-control form-control-danger" th:field="*{title}"
+								id="title" th:placeholder="'Naslov računa'" />
+							<div class="form-control-feedback" th:if="${errorText} != null"
+								th:text="${errorText}"></div>
 						</div>
 					</div>
 					<div class="col-xs-12 col-sm-4 col-md-4">
-						<div class="form-group">
+						<div th:class="form-group"
+							th:classappend="${errorText} != null ? has-danger : ''">
 							<label for="price">Cijena(kn):</label> <input type="number"
-								min="0" step="any" class="form-control" th:value="'0'"
-								id="price" name="price" th:required="required" />
+								class="form-control form-control-danger" min="0" step="any"
+								th:value="'0'" id="price" name="price"
+								th:required="required" />
 						</div>
 					</div>
-
 					<div class="col-xs-12 col-sm-4 col-md-4">
-						<div class="form-group">
-							<label for="description">Opis posla/troška:</label>
-							<textarea class="form-control" th:value="${description}"
-								id="description" rows="2" th:field="*{description}"></textarea>
-
+						<div th:class="form-group"
+							th:classappend="${errorText} != null ? has-danger : ''">
+							<label for="description">Opis obaveze/troška:</label> <input
+								type="text" class="form-control form-control-danger"
+								th:field="*{description}" id="description"
+								th:placeholder="'Opis računa'" />
+							<div class="form-control-feedback" th:if="${errorText} != null"
+								th:text="${errorText}"></div>
 						</div>
 					</div>
 				</div>
-
-
-				<div class="panel-footer clearfix">
-					<input type="submit" class="btn btn-primary"
-						th:value="'Spremi račun'" /> <br></br>
-
-					<button type="button" class="btn btn-primary pull-right"
-						data-toggle="modal" data-target="#myModal">
-						<i class="fa fa-save" aria-hidden="true"></i> Spremi aktivnost
-					</button>
-
-					<div
-						th:replace="fragments :: alertModal(header='Spremanje računa', 
-			message='Jeste li sigurni da želite spremiti uneseni račun?',
-			confirmLabel='Spremi',
-			cancelLabel='Odustani')"></div>
-
-				</div>
-
-
 
 			</div>
+
+			<div class="panel-footer clearfix">
+				<input type="submit" class="btn btn-primary" th:value="'Spremi'" />
+			</div>
 		</form>
+
+
 	</div>
 	<th:block layout:fragment="additionalScripts">
 
