@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8" />
+<title>Error</title>
+
+<th:block th:replace="fragments :: css"></th:block>
+</head>
+<body>
+	<div class="container text-center" style="margin-top:10vh;">
+		<div class="row">
+
+			<div class="col-md-12">
+				<div class="error-template">
+					<h1>Ups!</h1>
+					<!-- <a th:href="@{/}"><img th:src="@{/images/login_brand.png}" /></a> -->
+					<h3 th:if="${status} == '403'"
+						th:text=" '403: ' + 'Zabranjen pristup'"></h3>
+					<h3 th:if="${status} == '404'"
+						th:text=" '404: ' + 'Nepostojeća stranica'"></h3>
+					<h3 th:if="${status} == '500'"
+						th:text=" '500: ' + 'Greška na serveru'"></h3>
+					<div class="error-details">
+						Žao nam je, dogodila se greška.
+						<p th:if="${status} == '403'"
+							th:text="'Nemate pravo pristupa traženoj stranici.'"></p>
+						<p th:if="${status} == '404'"
+							th:text="'Tražena stranica nije pronađena.'"></p>
+						<p th:if="${status} == '500'"
+							th:text="${#dates.format(timestamp, 'dd.MM.YYYY. HH:mm:ss')}"></p>
+						<p th:if="${status} == '500'"
+							th:text="'Tražena stranica nije dostupna zbog problema na serveru.'"></p>
+					</div>
+
+
+					<hr />
+					<div class="error-actions">
+						<a th:href="@{/}" class="btn btn-primary btn-lg"><span
+							class="glyphicon glyphicon-home"></span> Povratak na naslovnu
+							stranicu </a>
+					</div>
+
+				</div>
+			</div>
+		</div>
+	</div>
+	<div th:replace="fragments :: footer"></div>
+	<div th:replace="fragments :: scripts"></div>
+</body>
+</html>

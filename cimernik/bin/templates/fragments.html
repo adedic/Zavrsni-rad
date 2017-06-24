@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:th="http://www.thymeleaf.org"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+<meta charset="UTF-8" />
+<th:block th:fragment="css">
+
+	<link rel="stylesheet" type="text/css"
+		th:href="@{/webjars/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css}" />
+
+	<link rel="stylesheet" type="text/css"
+		th:href="@{/webjars/tether/1.4.0/css/tether.min.css}" />
+
+	<link rel="stylesheet" type="text/css"
+		th:href="@{/webjars/font-awesome/4.7.0/css/font-awesome.min.css}" />
+	<link rel="stylesheet" type="text/css" th:href="@{/css/cimernik.css}" />
+</th:block>
+</head>
+<body>
+
+	<th:block th:fragment="header">
+		<nav
+			class="navbar navbar-toggleable-md sticky-top navbar-light bg-faded">
+			<button class="navbar-toggler navbar-toggler-right" type="button"
+				data-toggle="collapse" data-target="#navbarSupportedContent"
+				aria-controls="navbarSupportedContent" aria-expanded="false"
+				aria-label="Toggle navigation">
+				<span class="navbar-toggler-icon"></span>
+			</button>
+			<a class="navbar-brand" th:href="@{/}">Cimernik</a>
+
+			<div class="collapse navbar-collapse" id="navbarSupportedContent">
+
+				<form class="form-inline my-2 my-lg-0">
+					<input class="form-control mr-sm-2" type="text"
+						placeholder="Pronađi grupu cimera" />
+					<button class="btn btn-outline-success my-2 my-sm-0" type="submit">Traži</button>
+				</form>
+
+				<ul class="nav navbar-nav ml-auto">
+					<li class="nav-item">
+						<form th:action="@{/logout}" id="logout_form" method="post"
+							style="display: none;"></form>
+						<a class="nav-link" href="javascript:{}"
+							onclick="document.getElementById('logout_form').submit(); return false;">
+							Odjava (<th:block th:text="${#authentication.name}"></th:block>)
+						</a>
+					</li>
+				</ul>
+
+			</div>
+		</nav>
+
+
+
+	</th:block>
+
+
+	<th:block th:fragment="alertModal">
+		<div class="modal fade" id="myModal" role="dialog">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h4 class="modal-title" th:text="${header}"></h4>
+					</div>
+					<div class="modal-body">
+						<p th:text="${message}"></p>
+					</div>
+					<div class="modal-footer">
+						<input type="submit" class="btn btn-primary"
+							th:value="${confirmLabel}" />
+						<button type="button" class="btn btn-default" data-dismiss="modal"
+							th:text="${cancelLabel}"></button>
+					</div>
+				</div>
+			</div>
+		</div>
+	</th:block>
+
+	<th:block th:fragment="footer">
+		<footer class="footer">
+			<div class="container-fluid">
+				<p class="text-center" style="margin-top: 50vh;">
+					<th:block th:text="Cimernik"></th:block>
+					&copy;
+					<th:block th:text="${#dates.format(#dates.createNow(), 'yyyy')}"></th:block>
+				</p>
+			</div>
+		</footer>
+	</th:block>
+
+	<th:block th:fragment="scripts">
+
+
+		<script th:src="@{/webjars/jquery/3.1.1/jquery.min.js}"></script>
+
+		<script th:src="@{/webjars/tether/1.4.0/js/tether.min.js}"></script>
+		<script
+			th:src="@{/webjars/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js}"></script>
+
+		<script th:src="@{/webjars/spin-js/2.1.0/spin.js}"></script>
+		<script th:src="@{/js/cimernik.js}"></script>
+	</th:block>
+</body>
+</html>

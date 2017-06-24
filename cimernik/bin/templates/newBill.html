@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	layout:decorator="layout">
+<head>
+<meta charset="UTF-8" />
+<title>Novi račun</title>
+
+<th:block th:replace="fragments :: css"></th:block>
+
+</head>
+<body>
+	<div layout:fragment="content">
+
+		<h3>
+			Novi račun <span class="h4"
+				th:text="${'za ' + #dates.format(#dates.createNow(), 'dd.MM.YYYY.')}"></span>
+		</h3>
+
+		<br></br>
+		<form id="billForm" method="POST" th:object="${bill}"
+			th:action="@{/bill/new}">
+
+			<input type="hidden" class="form-control" name="dateCreated"
+				id="dateCreated"
+				th:value="${#dates.format(#dates.createNow(), 'dd.MM.YYYY.')}" />
+
+
+			<div class="panel panel-default">
+				<div class="panel-body">
+					<div class="col-xs-12 col-sm-4 col-md-4">
+						<div class="form-group" id="categoriesSelect">
+							<label for="category">Kategorija: </label> <select id="category"
+								name="category" class="form-control" th:autofocus="autofocus">
+								<option th:each="c : ${categories}" th:value="${c.id}"
+									th:text="${c.description}"></option>
+							</select>
+						</div>
+					</div>
+					<div class="col-xs-12 col-sm-4 col-md-4">
+						<div class="form-group">
+							<label for="title">Naslov:</label> <input type="text"
+								oninvalid="this.setCustomValidity('Naslov mora biti upisan!')"
+								oninput="setCustomValidity('')" class="form-control"
+								th:required="required" th:value="${title}" id="title"
+								th:field="*{title}" />
+
+						</div>
+					</div>
+					<div class="col-xs-12 col-sm-4 col-md-4">
+						<div class="form-group">
+							<label for="price">Cijena(kn):</label> <input type="number"
+								min="0" step="any" class="form-control" th:value="'0'"
+								id="price" name="price" th:required="required" />
+						</div>
+					</div>
+
+					<div class="col-xs-12 col-sm-4 col-md-4">
+						<div class="form-group">
+							<label for="description">Opis posla/troška:</label>
+							<textarea class="form-control" th:value="${description}"
+								id="description" rows="2" th:field="*{description}"></textarea>
+
+						</div>
+					</div>
+				</div>
+
+
+				<div class="panel-footer clearfix">
+					<input type="submit" class="btn btn-primary"
+						th:value="'Spremi račun'" /> <br></br>
+
+					<button type="button" class="btn btn-primary pull-right"
+						data-toggle="modal" data-target="#myModal">
+						<i class="fa fa-save" aria-hidden="true"></i> Spremi aktivnost
+					</button>
+
+					<div
+						th:replace="fragments :: alertModal(header='Spremanje računa', 
+			message='Jeste li sigurni da želite spremiti uneseni račun?',
+			confirmLabel='Spremi',
+			cancelLabel='Odustani')"></div>
+
+				</div>
+
+
+
+			</div>
+		</form>
+	</div>
+	<th:block layout:fragment="additionalScripts">
+
+	</th:block>
+
+
+</body>
+</html>

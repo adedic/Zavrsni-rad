@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:th="http://www.thymeleaf.org">
+<head>
+
+<meta charset="UTF-8"></meta>
+<title>Prijava</title>
+<link rel="stylesheet"
+	href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" />
+
+
+</head>
+
+<body>
+	<div class="container" style="padding-top: 20vh;">
+		<div class="row justify-content-md-center">
+			<div class="col-md-4">
+				<div class="panel panel-default">
+					<div class="panel-heading">
+						<h3 class="panel-title">Prijava korisnika</h3><br></br>
+					</div>
+					<div class="panel-body">
+						<p th:if="${errorPoruka != null}" class="alert alert-danger"
+							th:text="${errorPoruka}"></p>
+
+						<p th:if="${logoutPoruka != null}" class="alert alert-success"
+							th:text="${logoutPoruka}"></p>
+
+						<form role="form" method="POST" name="formLogin"
+							th:action='@{/login}'>
+							<fieldset>
+								<div class="form-group">
+									<input class="form-control" autofocus="autofocus"
+										required="required" placeholder="Korisničko ime"
+										name="username" type="text" />
+								</div>
+								<div class="form-group">
+									<input class="form-control" required="required"
+										placeholder="Lozinka" name="password" type="password" value="" />
+								</div>
+
+								<input class="btn btn-lg btn-primary btn-block" type="submit"
+									value="Prijava" />
+							</fieldset>
+						</form>
+
+					</div>
+				</div>
+			</div>
+		</div>
+
+	</div>
+
+	<script src="https://code.jquery.com/jquery-3.1.1.slim.min.js"></script>
+	<script
+		src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js"></script>
+	<script
+		src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js"></script>
+</body>
+</html>

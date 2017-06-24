@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	layout:decorator="layout">
+<head>
+<meta charset="UTF-8" />
+<title>Cimernik - troškovi grupe</title>
+
+<th:block th:replace="fragments :: css"></th:block>
+
+
+</head>
+<body>
+	<div layout:fragment="content">
+
+		<div th:if="!${groupExists}">
+			<div th:if="${leaveSuccess !=null} ">
+				<div class="alert alert-success alert-dismissable">
+					<a href="#" class="close" data-dismiss="alert" aria-label="close">×</a>
+					Uspješno napuštanje grupe.
+				</div>
+			</div>
+			<h1>Nemaš grupu?</h1>
+			<h2>Napravi grupu cimera ili je pronađi u tražlici! :)</h2>
+			<a th:href="@{/group/new}" class="btn btn-primary">Napravi grupu</a>
+		</div>
+
+		<div th:if="${payoffSuccess !=null} ">
+			<div class="alert alert-success alert-dismissable">
+				<a href="#" class="close" data-dismiss="alert" aria-label="close">×</a>
+				Uspješna isplata dugova.
+			</div>
+		</div>
+
+
+		<div th:if="${groupExists}">
+			<div th:if="${groupSuccess !=null} ">
+				<div class="alert alert-success alert-dismissable">
+					<a href="#" class="close" data-dismiss="alert" aria-label="close">×</a>
+					Uspješno stvorena grupa cimera.
+				</div>
+			</div>
+			<div th:if="${deleteSuccess}">
+				<div class="alert alert-success alert-dismissable">
+					<a href="#" class="close" data-dismiss="alert" aria-label="close">×</a>
+					Uspješno obrisan račun.
+				</div>
+			</div>
+			<div th:if="${memberSuccess}">
+				<div class="alert alert-success alert-dismissable">
+					<a href="#" class="close" data-dismiss="alert" aria-label="close">×</a>
+					Uspješno dodan novi cimer.
+				</div>
+			</div>
+
+			<div class="row">
+				<div class="col-md-3">
+					<div class="list-group">
+						<a th:href="@{/group/dashboard}"
+							class="list-group-item list-group-item-action active">Troškovi
+							grupe</a> <a th:href="@{/group/bills/{id}(id=${user.id})}"
+							class="list-group-item list-group-item-action">Moji troškovi</a>
+
+					</div>
+
+					<div th:if="${hasDebt}">
+						<p th:text="'Duguješ: ' + ${debt} + ' kn'"></p>
+					</div>
+					<div th:if="!${hasDebt}">
+						<p th:text="'Duguju ti: ' + ${debt} + ' kn'"></p>
+					</div>
+					<a th:href="@{/group/payoff}" class="btn btn-warning"
+						th:classappend="${hasDebt} ? enabled : disabled"><span
+						th:if="${hasDebt}" th:text="'Isplata dugova'"></span> <span
+						th:if="!${hasDebt}" th:text="'Nemaš dugova'"></span></a>
+					<p th:text="'Potrošnja ovaj mjesec: ' + ${monthExpense} + ' kn'"></p>
+					<h2>
+						<small>Tvoji cimeri:</small>
+					</h2>
+					<ul class="nav navbar nav-pills nav-stacked flex-column">
+						<li class="nav-item" th:each="member : ${members}"><a
+							th:if="${member.username != user.username}"
+							th:href="@{/group/bills/{id}(id=${member.id})}" class="nav-link"
+							th:text="${member.getCredentials()}"> </a></li>
+						<li class="nav-item"><a th:href="@{/members/new}"><i
+								class="fa fa-plus" aria-hidden="true"></i> Dodaj cimera </a></li>
+					</ul>
+				</div>
+
+				<div id="accordion" role="tablist" aria-multiselectable="true"
+					class="col-md-9">
+					<div class="row">
+						<h1 class="h2 col-md-7">
+							<small>Svi troškovi grupe </small><b th:text="${group.name}"></b>
+						</h1>
+						<div class="h2 col-md-5">
+							<div class="row">
+								<div class="col-md-6">
+									<a th:href="@{/bill/new}" class="btn btn-success"> Dodaj
+										novi račun </a>
+								</div>
+								<form id="leaveForm" class="col-md-6" method="POST"
+									th:action="@{/group/leave}">
+									<button type="button" style="cursor: pointer"
+										class="btn btn-primary" data-toggle="modal"
+										data-target="#myModal">
+										<i aria-hidden="true"></i> Napusti grupu
+									</button>
+									<div
+										th:replace="fragments :: alertModal(header='Napuštanje grupe', 
+									message='Jeste li sigurni da želite napustiti grupu?',
+									confirmLabel='Napusti grupu',
+									cancelLabel='Odustani')"></div>
+
+
+								</form>
+
+
+							</div>
+
+						</div>
+
+
+					</div>
+
+					<br></br>
+					<div th:if="!${groupBillsExists}">
+						<div class="alert alert-warning alert-dismissable">
+							<a href="#" class="close" data-dismiss="alert" aria-label="close">×</a>
+							U grupi nema nijednog računa.
+						</div>
+					</div>
+					<div class="card" th:each="bill : ${groupBills}">
+						<div class="card-header" role="tab" th:attr="id=${bill.title}">
+
+							<div>
+								<div class="row media">
+									<div class="col-md-3 media-left">
+										<span class="badge badge-default media-object"
+											th:text="${#dates.format(bill.dateCreated, 'dd.MM.YYYY.')}"></span>
+
+									</div>
+									<div class="media-body row">
+										<div class="col-md-10">
+											<h4 class="mb-0">
+												<a class="hidden-xs" data-toggle="collapse"
+													data-parent="#accordion" aria-expanded="true"
+													th:attr="aria-controls='collapse'+ ${bill.id}, href='#'+'collapse' +
+											${bill.id}"
+													th:text="${bill.title}"></a>
+											</h4>
+											<p>
+												By <b th:text="${bill.user.username}"></b>
+											</p>
+										</div>
+										<div th:if="${bill.user == user}" class="col-md-2"
+											style="margin-top: 15px">
+											<a th:href="@{/group/deleteBill/{id}(id=${bill.id}) }"><i
+												class="fa fa-trash" aria-hidden="true"
+												style="font-size: 2em;"></i> </a>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+
+						<div
+							th:attr="id='collapse'+ ${bill.id},aria-labeledby=${bill.title}"
+							class="collapse" role="tabpanel">
+							<div class="card-block">
+								<h4 th:text="${bill.title}"></h4>
+								<small
+									th:text="${#dates.format(bill.dateCreated, 'dd.MM.YYYY.')}"></small>
+								<span class="badge badge-info media-object"
+									th:text="${bill.category.getDescription()}"></span>
+								<p class="hidden-xs" th:text="${bill.price}+ ' kn'"></p>
+								<p class="hidden-xs" th:text="${bill.description}"></p>
+								<p>
+									Račun napravio: <b th:text="${bill.user.username}"></b>
+								</p>
+							</div>
+						</div>
+					</div>
+				</div>
+
+			</div>
+		</div>
+
+	</div>
+	<th:block layout:fragment="additionalScripts">
+
+
+	</th:block>
+
+
+</body>
+</html>

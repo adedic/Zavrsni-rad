@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	layout:decorator="layout">
+<head>
+<meta charset="UTF-8" />
+<title>Novi cimer</title>
+
+<th:block th:replace="fragments :: css"></th:block>
+
+</head>
+<body>
+	<div layout:fragment="content">
+		<form id="member" th:action="@{/members/new}" method="post"
+			th:object="${member}">
+
+			<div class="panel panel-default">
+				<div class="panel-heading">
+					<h2>Novi cimer</h2>
+				</div>
+				<br></br>
+				<div class="panel-body">
+					<div class="col-xs-12 col-sm-4 col-md-4">
+						<div th:class="form-group"
+							th:classappend="${errorText} != null ? has-danger : ''">
+							<label for="username">Korisničko ime cimera:</label> <input type="text"
+								class="form-control form-control-danger" th:field="*{username}"
+								th:autofocus="autofocus" id="username" th:placeholder="'Korisničko ime cimera'" />
+							<div class="form-control-feedback" th:if="${errorText} != null"
+								th:text="${errorText}"></div>
+						</div>
+					</div>
+				
+				</div>
+
+				<div class="panel-footer clearfix">
+					<input type="submit" class="btn btn-primary" th:value="'Spremi'" />
+
+				</div>
+			</div>
+
+
+		</form>
+	</div>
+	<th:block layout:fragment="additionalScripts">
+
+	</th:block>
+</body>
+</html>
