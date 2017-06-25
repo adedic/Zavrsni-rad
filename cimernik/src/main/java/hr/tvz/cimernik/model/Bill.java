@@ -15,6 +15,9 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
+import javax.validation.constraints.NotNull;
+
+import org.hibernate.validator.constraints.NotEmpty;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -52,6 +55,8 @@ public class Bill implements Serializable {
 
 	@Getter
 	@Setter
+	@NotNull	
+	@NotEmpty(message = "Moraš unijeti naslov.")
 	private String title;
 	@Getter
 	@Setter
@@ -70,7 +75,6 @@ public class Bill implements Serializable {
 	private Date lastUpdateDate;
 	@Getter
 	@Setter
-
 	private String description;
 
 	@ManyToOne(fetch = FetchType.EAGER)

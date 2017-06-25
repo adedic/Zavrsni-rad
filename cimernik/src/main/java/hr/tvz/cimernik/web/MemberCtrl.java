@@ -47,7 +47,8 @@ public class MemberCtrl {
 		List<User> members = group.getMembers();
 		User member = userRepository.findOneByUsername(formMember.getUsername());
 		
-		if (MainCtrl.validateUserInputError(model, members, formMember.getUsername(), member)) {
+		
+		if (validateUserInputError(model, members, formMember.getUsername(), member, user)) {
 			return "newMember";
 		} 
 		group.setMembers(members);
@@ -58,6 +59,41 @@ public class MemberCtrl {
 		groupRepository.save(group);
 
 		return "redirect:/group/dashboard?memberSuccess=true";
+	}
+	
+	public static boolean validateUserInputError(Model model, List<User> members, String memberString, User member, User currentUser){
+		
+		String errorText = "";
+		if (memberString.equals("")) {
+			errorText += "Moraš unijeti korisničko ime cimera.";
+			model.addAttribute("errorText", errorText);
+			return true;
+
+		}
+		// provjera je li user postoji
+		boolean userNoExists = member == null;
+		if (userNoExists || memberString.equals(currentUser.getUsername())) {
+			model.addAttribute("userNoExists", true);
+			errorText += "Moraš unijeti postojeće korisničko ime cimera.";
+			model.addAttribute("errorText", errorText);
+			return true;
+		} else if (!userNoExists) {
+			model.addAttribute("userNoExists", false);
+			// provjera je li user vec u nekoj grupi
+			if (member.getRoomateGroup() != null) {
+				model.addAttribute("userHasGroup", true);
+				errorText += "Korisnik već ima grupu!";
+				model.addAttribute("errorText", errorText);
+				return true;
+			} else if (member.getRoomateGroup() == null) {
+				model.addAttribute("userHasGroup", false);
+				members.add(member);
+				
+
+			}
+			
+		}
+		return false;
 	}
 
 }

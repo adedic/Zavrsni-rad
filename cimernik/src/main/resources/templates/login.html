@@ -17,7 +17,8 @@
 			<div class="col-md-4">
 				<div class="panel panel-default">
 					<div class="panel-heading">
-						<h3 class="panel-title">Prijava korisnika</h3><br></br>
+						<h3 class="panel-title">Prijava korisnika</h3>
+						<br></br>
 					</div>
 					<div class="panel-body">
 						<p th:if="${errorPoruka != null}" class="alert alert-danger"
@@ -39,15 +40,20 @@
 										placeholder="Lozinka" name="password" type="password" value="" />
 								</div>
 
-								<input class="btn btn-lg btn-primary btn-block" type="submit"
+								<input class="btn btn-lg btn-outline-primary btn-block" type="submit"
 									value="Prijava" />
 							</fieldset>
 						</form>
+						<br></br>
+						<h4>Nemaš račun?</h4>
+						<a th:href="@{/register}" class="btn btn-lg btn-outline-success btn-block">Registriraj se</a>
 
 					</div>
 				</div>
 			</div>
+
 		</div>
+		
 
 	</div>
 

@@ -43,12 +43,16 @@ public final class MainCtrl {
 	@Autowired
 	CategoryRepository categoryRepository;
 	
-	
+
 	// svi računi korisnika
 	@GetMapping("/bills/{id}")
 	String showUserBills(@PathVariable Integer id, Model model, Principal principal,
 			@RequestParam(value = "deleteSuccess", required = false) String deleteSuccess) {
 		User user = userRepository.findOne(id);
+	
+		if(user.getRoomateGroup()==null){
+			return "redirect:/";
+		}
 		boolean isRoomate = true;
 		if(user.equals(userRepository.findOneByUsername(principal.getName()))){
 			isRoomate=false;
@@ -130,7 +134,7 @@ public final class MainCtrl {
 		model.addAttribute("monthExpense", monthExpense);
 		boolean hasDebt = debt(user).compareTo(new BigDecimal(0)) < 0;
 		model.addAttribute("hasDebt", hasDebt);
-		model.addAttribute("debt", debt(user).abs());
+		model.addAttribute("debt", debt(user).abs().setScale(2, RoundingMode.CEILING));
 
 		model.addAttribute("payoffSuccess", payoffSuccess);
 		model.addAttribute("leaveSuccess", leaveSuccess);
@@ -168,7 +172,21 @@ public final class MainCtrl {
 
 		return "redirect:dashboard?leaveSuccess=true";
 	}
-
+	
+	@PostMapping("/search")
+	String findGroup(Model model, Principal principal, @RequestParam("name") String name){
+		User user = userRepository.findOneByUsername(principal.getName());
+		//ako ima grupu redirect
+		if(user.getRoomateGroup() != null){
+			model.addAttribute("groupExists",true);
+		}
+		List<RoomateGroup> groups = groupRepository.findAll().stream().filter(g -> g.getName().toLowerCase().contains(name.toLowerCase())).collect(Collectors.toList());
+		model.addAttribute("groups",groups);
+		model.addAttribute("query",name);
+		
+		
+		return "groups";
+	}
 	@GetMapping("/new")
 	String showFormNewGroup(Model model, Principal principal) {
 		model.addAttribute("roomateGroup", new RoomateGroup());
@@ -180,77 +198,46 @@ public final class MainCtrl {
 		return "newGroup";
 	}
 	
-	@PostMapping("/search")
-	String findGroup(Model model, Principal principal, @RequestParam("name") String name){
-		List<RoomateGroup> groups = groupRepository.findAll().stream().filter(g -> g.getName().toLowerCase().contains(name.toLowerCase())).collect(Collectors.toList());
 	
-		model.addAttribute("groups",groups);
-		
-		
-		return "groups";
-	}
 
 	@PostMapping("/new")
-	String saveGroup(Model model, Principal principal, @RequestParam("member[]") List<String> userStrings,
+	String saveGroup(Model model, Principal principal /*, @RequestParam("member[]") List<String> userStrings*/,
 			@Valid @ModelAttribute("roomateGroup") RoomateGroup roomateGroup, BindingResult bindingResult) {
-		boolean error = bindingResult.hasErrors();
-		List<User> members = new ArrayList<>();
-		members.add(userRepository.findOneByUsername(principal.getName()));
-
 		
+		if(bindingResult.hasErrors()) return  "newGroup";
+		
+		List<User> members = new ArrayList<>();
+		User currentUser = userRepository.findOneByUsername(principal.getName());
+		members.add(currentUser);
+/*
 		for (String userString : userStrings) {
-
+			
+			if(userString.equals(currentUser.getUsername())){
+				System.out.println("isti");
+				
+			}
 			User u = userRepository.findOneByUsername(userString);
-			error = validateUserInputError(model, members, userString, u);
-			if(error){
+			if(MemberCtrl.validateUserInputError(model, members, userString, u, currentUser)){
 				return "newGroup";
 			}
 		}
-
+*/
 		RoomateGroup newGroup = new RoomateGroup(roomateGroup.getName(), members);
 		groupRepository.save(newGroup);
+		
+		currentUser.setRoomateGroup(newGroup);
+		userRepository.save(currentUser);
+		/*
 		for (User u : members) {
 			u.setRoomateGroup(newGroup);
 			userRepository.save(u);
-		}
+		}*/
+		groupRepository.save(newGroup);
 
 		return "redirect:dashboard?groupSuccess=true";
 	}
-	public static boolean validateUserInputError(Model model,List<User> members, String memberString, User member){
 	
-		String errorText = "";
-		if (memberString.equals("")) {
-			errorText += "Moraš unijeti korisničko ime cimera.";
-			model.addAttribute("errorText", errorText);
-			return true;
 
-		}
-		// provjera je li user postoji
-		boolean userNoExists = member == null;
-		if (userNoExists) {
-			model.addAttribute("userNoExists", true);
-			errorText += "Moraš unijeti postojeće korisničko ime cimera.";
-			model.addAttribute("errorText", errorText);
-			return true;
-		} else if (!userNoExists) {
-			model.addAttribute("userNoExists", false);
-
-			// provjera je li user vec u nekoj grupi
-			if (member.getRoomateGroup() != null) {
-				model.addAttribute("userHasGroup", true);
-				errorText += "Korisnik već ima grupu!";
-				model.addAttribute("errorText", errorText);
-				return true;
-			} else if (member.getRoomateGroup() == null) {
-				model.addAttribute("userHasGroup", false);
-				members.add(member);
-				
-
-			}
-			
-		}
-		return false;
-	}
 
 	@Autowired
 	CategoryRepository cr;
@@ -271,10 +258,13 @@ public final class MainCtrl {
 	}
 
 	public boolean payoff(User user) {
+		
 		BigDecimal debt = debt(user);
+		//model.addAttribute("debt", debt);
 		if (debt.compareTo(new BigDecimal(0)) >= 0) {
 			return false;
 		}
+		//oni kojima treba novac
 		List<User> creditors = user.getRoomateGroup().getMembers().stream()
 				.filter(m -> debt(m).compareTo(new BigDecimal(0)) > 0).collect(Collectors.toList());
 		BigDecimal creditSum = creditors.stream().map(c -> debt(c)).reduce(new BigDecimal(0), (a, b) -> a.add(b));
@@ -286,7 +276,7 @@ public final class MainCtrl {
 			BigDecimal credit = debt(c);
 			BigDecimal creditRatio = credit.divide(creditSum, 2, RoundingMode.HALF_UP);
 			BigDecimal payedCredit = creditRatio.multiply(debt);
-			return new Bill(c, c.getRoomateGroup(), "Isplata duga", payedCredit, date, "", payoffCategory);
+			return new Bill(c, c.getRoomateGroup(), "Isplata duga", payedCredit.setScale(2, RoundingMode.CEILING), date, "", payoffCategory);
 		}).collect(Collectors.toList());
 
 		Bill bill = new Bill(user, user.getRoomateGroup(), "Isplata duga", debt.negate(), date, "", payoffCategory);

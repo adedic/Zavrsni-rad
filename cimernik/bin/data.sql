@@ -2,10 +2,6 @@
 INSERT INTO roomate_group(id, name) VALUES (1, 'Naj cimeri ikad');
 
 INSERT INTO roomate_group(id, name) VALUES (2, '238 239');
-INSERT INTO roomate_group(id, name) VALUES (3, 'Naj grupa ikad');
-INSERT INTO roomate_group(id, name) VALUES (4, 'Najbolja');
-INSERT INTO roomate_group(id, name) VALUES (5, 'Grupa');
-INSERT INTO roomate_group(id, name) VALUES (6, 'Podrumara');
 
 
 INSERT INTO user(id, group_id, name, surname ,username,password,enabled)
@@ -20,7 +16,7 @@ VALUES (3,'Pero','Perić','pperic','$2a$04$sajsx1aReuYPVjGD/8yPDOhAUpn8HDwIbsebg
 INSERT INTO user(id, name, surname ,username,password,enabled)
 VALUES (4,'Jure','Jurić','jjuric','$2a$04$sajsx1aReuYPVjGD/8yPDOhAUpn8HDwIbsebgSlFelXuQBPXlrCS.', true);
 
-INSERT INTO user(id, name, surname ,username,password,enabled)
+INSERT INTO user(id, name, surname ,username, password,enabled)
 VALUES (5,'Adminko','Adminić','admin','$2a$04$sajsx1aReuYPVjGD/8yPDOhAUpn8HDwIbsebgSlFelXuQBPXlrCS.', true);
 
 INSERT INTO user(id, name, surname ,username,password, enabled)

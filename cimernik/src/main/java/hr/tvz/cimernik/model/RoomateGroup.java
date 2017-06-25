@@ -47,12 +47,10 @@ public class RoomateGroup implements Serializable {
 	@Getter
 	@Setter
 	@OneToMany(mappedBy="roomateGroup",fetch=FetchType.EAGER) 
-	@NotNull
 	private List<User> members;
 
 	public RoomateGroup(String name, List<User> members){
 		this.name =  name;
 		this.members = members;
 	}
-	
 }

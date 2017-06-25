@@ -13,8 +13,9 @@
 <body>
 	<div layout:fragment="content">
 
-		<form id="bill" th:action="@{/bill/new}" method="post"
+		<form id="bill" th:action="@{/bill/new}" action="" method="post"
 			th:object="${bill}">
+
 			<div class="panel panel-default">
 				<div class="panel-heading">
 					<h2>
@@ -23,63 +24,62 @@
 					</h2>
 				</div>
 				<br></br>
+
 				<div class="panel-body">
-					<input type="hidden" class="form-control" name="dateCreated"
-						id="dateCreated"
-						th:value="${#dates.format(#dates.createNow(), 'dd.MM.YYYY.')}" />
 
 					<div class="col-xs-12 col-sm-4 col-md-4">
 						<div th:class="form-group"
-							th:classappend="${errorText} != null ? has-danger : ''">
+							th:classappend="${#fields.hasErrors('category')} ? has-danger : ''">
 							<label for="category">Kategorija: </label> <select id="category"
 								th:field="*{category}" class="form-control form-control-danger"
-								th:autofocus="autofocus">
+								th:required="required" th:autofocus="autofocus">
 								<option th:each="c : ${categories}" th:value="${c.id}"
 									th:text="${c.description}"></option>
 							</select>
-							<div class="form-control-feedback" th:if="${errorText} != null"
-								th:text="${errorText}"></div>
+							<div class="form-control-feedback"
+								th:if="${#fields.hasErrors('category')}" th:errors="*{category}"></div>
 						</div>
 					</div>
 
 
 					<div class="col-xs-12 col-sm-4 col-md-4">
 						<div th:class="form-group"
-							th:classappend="${errorText} != null ? has-danger : ''">
+							th:classappend="${#fields.hasErrors('title')} ? has-danger : ''">
 							<label for="title">Naslov:</label> <input type="text"
 								class="form-control form-control-danger" th:field="*{title}"
 								id="title" th:placeholder="'Naslov računa'" />
-							<div class="form-control-feedback" th:if="${errorText} != null"
-								th:text="${errorText}"></div>
+							<div class="form-control-feedback"
+								th:if="${#fields.hasErrors('title')}" th:errors="*{title}"></div>
 						</div>
 					</div>
 					<div class="col-xs-12 col-sm-4 col-md-4">
 						<div th:class="form-group"
-							th:classappend="${errorText} != null ? has-danger : ''">
+							th:classappend="${#fields.hasErrors('price')} ? has-danger : ''">
 							<label for="price">Cijena(kn):</label> <input type="number"
 								class="form-control form-control-danger" min="0" step="any"
-								th:value="'0'" id="price" name="price"
-								th:required="required" />
+								th:value="'0'" id="price" name="price" th:required="required" />
+							<div class="form-control-feedback"
+								th:if="${#fields.hasErrors('price')}" th:errors="*{price}"></div>
 						</div>
 					</div>
 					<div class="col-xs-12 col-sm-4 col-md-4">
 						<div th:class="form-group"
-							th:classappend="${errorText} != null ? has-danger : ''">
+							th:classappend="${#fields.hasErrors('description')} ? has-danger : ''">
 							<label for="description">Opis obaveze/troška:</label> <input
 								type="text" class="form-control form-control-danger"
 								th:field="*{description}" id="description"
 								th:placeholder="'Opis računa'" />
-							<div class="form-control-feedback" th:if="${errorText} != null"
-								th:text="${errorText}"></div>
+							<div class="form-control-feedback"
+								th:if="${#fields.hasErrors('description')}"
+								th:errors="*{description}"></div>
 						</div>
 					</div>
 				</div>
-
+				<div class="panel-footer clearfix">
+					<input type="submit" class="btn btn-outline-primary" th:value="'Spremi'" />
+				</div>
 			</div>
 
-			<div class="panel-footer clearfix">
-				<input type="submit" class="btn btn-primary" th:value="'Spremi'" />
-			</div>
 		</form>
 
 

@@ -31,6 +31,7 @@
 								th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></div>
 						</div>
 					</div>
+					<!-- 
 					<div class="col-xs-12 col-sm-4 col-md-4">
 						<div th:class="form-group"
 							th:classappend="${errorText} != null ? has-danger : ''">
@@ -39,19 +40,15 @@
 								id="member1" class="form-control form-control-danger" />
 							<div class="form-control-feedback" th:if="${errorText} != null"
 								th:text="${errorText}"></div>
-							<input type="text" th:placeholder="'Korisničko ime cimera'"
-								name="member[]" id="member2"
-								class="form-control form-control-danger" />
-							<div class="form-control-feedback" th:if="${errorText} != null"
-								th:text="${errorText}"></div>
-
 
 						</div>
 					</div>
+					-->
+
 				</div>
 
 				<div class="panel-footer clearfix">
-					<input type="submit" class="btn btn-primary" th:value="'Spremi'" />
+					<input type="submit" class="btn btn-outline-primary" th:value="'Spremi'" />
 
 				</div>
 			</div>

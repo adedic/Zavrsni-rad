@@ -12,5 +12,6 @@ import hr.tvz.cimernik.model.User;
 public interface UserRepository extends JpaRepository<User, Integer>{
 	User findOneByUsername(String username);
 	List<User> findAllByRoomateGroup(RoomateGroup rg);
+	Integer countByUsername(String username);
 
 }

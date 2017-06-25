@@ -1,7 +1,10 @@
 package hr.tvz.cimernik.model;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
@@ -9,7 +12,10 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
+
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -51,32 +57,47 @@ public class User implements Serializable {
 	@Setter
 	private String username;
 	@Getter
-	@Setter
 	private String password;
 	@Getter
 	@Setter
 	private boolean enabled;
+
+	@Getter
+	@OneToMany(mappedBy = "user", fetch = FetchType.EAGER, cascade = { CascadeType.ALL }, orphanRemoval = true)
+	private List<Role> roleList;
 	/*
 	@Getter
 	@Setter
-	private boolean inviterId;
+	private boolean inviteId;
 	*/
-
-	public User(Integer id, String name, String surname, String phone, String username, String password,
-			boolean enabled) {
-		super();
-		this.id = id;
-		this.name = name;
-		this.surname = surname;
-		this.phone = phone;
-		this.username = username;
-		this.password = password;
-		this.enabled = enabled;
-	}
+	
 
 	public String getCredentials() {
 		return this.name + " " + this.surname;
 	}
+
+	public User(String username, boolean enabled) {
+		this.username = username;
+		this.enabled = enabled;
+		roleList = new ArrayList<>();
+	}
+	public void setPassword(String password) {
+		if (password != null)
+			this.password = new BCryptPasswordEncoder().encode(password);
+		else
+			this.password = password;
+	}
 	
+	public void setRoleList(String... roles) {
+		for (String role : roles) {
+			Role newRole = new Role();
+			newRole.setUser(this);
+			newRole.setRole(role);
+			roleList.add(newRole);
+		}
+	}
+	
+
+
 	
 }

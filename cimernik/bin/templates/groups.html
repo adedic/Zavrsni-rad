@@ -12,12 +12,14 @@
 </head>
 <body>
 	<div layout:fragment="content">
+		<h1>Rezultati pretrage:</h1>
 		<div th:if="${groups.isEmpty()}">
-				<div class="alert alert-warning alert-dismissable">
-					<a href="#" class="close" data-dismiss="alert" aria-label="close">×</a>
-					Nema rezultata za taj upit. Pokušaj ponovno.
-				</div>
+			<div class="alert alert-warning alert-dismissable">
+				<a href="#" class="close" data-dismiss="alert" aria-label="close">×</a>
+				Nema rezultata za upit &quot;<b class="lead" th:text="${query}"></b>&quot;.
 			</div>
+		</div>
+
 		<div class="card" style="width: 60rem;" th:each="group : ${groups}">
 			<div class="card-block">
 				<h2 class="card-title" th:text="${group.name}"></h2>
@@ -29,17 +31,28 @@
 				</ul>
 			</div>
 			<div class="card-block">
-				<a href="#"><i class="fa fa-sign-in" aria-hidden="true"></i>
-					Priduži se grupi</a>
+				<ul class="nav navbar nav-pills nav-stacked flex-column">
+					<li class="nav-item"><a href="#" class="nav-link"
+						th:classappend="!${groupExists} ? enabled : disabled"><i
+							class="fa fa-sign-in" aria-hidden="true"></i> Priduži se grupi</a></li>
+					<li class="nav-item">
+						<form id="leaveForm" th:if="${groupExists}" method="POST"
+							th:action="@{/group/leave}">
+							<a href="#" class="nav-link" data-toggle="modal" data-target="#myModal">
+								<i class="fa fa-sign-out" aria-hidden="true"></i> Napusti svoju
+								grupu
+							</a>
+							<div
+								th:replace="fragments :: alertModal(header='Napuštanje grupe', 
+									message='Jeste li sigurni da želite napustiti grupu?',
+									confirmLabel='Napusti grupu',
+									cancelLabel='Odustani')"></div>
+
+						</form>
+					</li>
+				</ul>
 			</div>
 		</div>
-
-
-		<!--  
-					<li class="nav-item" th:each="member : ${members}"><p
-							class="nav-link"
-							th:text="${member.getCredentials()}"></p></li>
-							-->
 
 
 	</div>
