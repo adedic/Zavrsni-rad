@@ -13,8 +13,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import hr.tvz.cimernik.db.BillRepository;
 import hr.tvz.cimernik.db.CategoryRepository;
+import hr.tvz.cimernik.db.InviteRepository;
 import hr.tvz.cimernik.db.RoomateGroupRepository;
 import hr.tvz.cimernik.db.UserRepository;
+import hr.tvz.cimernik.model.Invite;
 import hr.tvz.cimernik.model.RoomateGroup;
 import hr.tvz.cimernik.model.User;
 
@@ -29,6 +31,10 @@ public class MemberCtrl {
 	BillRepository billRepository;
 	@Autowired
 	CategoryRepository categoryRepository;
+	@Autowired
+	InviteRepository inviteRepository;
+
+	
 
 	@GetMapping("/new")
 	String showFormMember(Model model, Principal principal) {
@@ -46,23 +52,23 @@ public class MemberCtrl {
 		RoomateGroup group = user.getRoomateGroup();
 		List<User> members = group.getMembers();
 		User member = userRepository.findOneByUsername(formMember.getUsername());
-		
-		
+
 		if (validateUserInputError(model, members, formMember.getUsername(), member, user)) {
 			return "newMember";
-		} 
-		group.setMembers(members);
+		}
 
-		member.setRoomateGroup(group);
+		Invite invite = new Invite(group, member, user);
+		inviteRepository.save(invite);
+		member.setInvites(invite);
 
 		userRepository.save(member);
-		groupRepository.save(group);
 
-		return "redirect:/group/dashboard?memberSuccess=true";
+		return "redirect:/group/dashboard?memberInvite=true";
 	}
-	
-	public static boolean validateUserInputError(Model model, List<User> members, String memberString, User member, User currentUser){
-		
+
+	public static boolean validateUserInputError(Model model, List<User> members, String memberString, User member,
+			User currentUser) {
+
 		String errorText = "";
 		if (memberString.equals("")) {
 			errorText += "Moraš unijeti korisničko ime cimera.";
@@ -88,10 +94,9 @@ public class MemberCtrl {
 			} else if (member.getRoomateGroup() == null) {
 				model.addAttribute("userHasGroup", false);
 				members.add(member);
-				
 
 			}
-			
+
 		}
 		return false;
 	}

@@ -22,10 +22,40 @@
 				</div>
 			</div>
 			<h1>Nemaš grupu?</h1>
-			<h2>Napravi grupu cimera ili je pronađi u tražlici! :)</h2>
-			<a th:href="@{/group/new}" class="btn btn-outline-primary">Napravi
-				grupu</a>
+			<h2>Napravi grupu cimera ili je pronađi u tražilici! :)</h2>
+			<br></br> <a th:href="@{/group/new}" class="btn btn-outline-primary">Napravi
+				grupu</a> <br></br> <br></br>
+			<div class="alert alert-info alert-dismissable"
+				th:each="invite : ${invitesJoin}" >
+				<div>
+					<button type="button" class="close" data-dismiss="alert"
+						aria-label="close" aria-hidden="true">×</button>
+					<h4>
+						Zahtjev za pridruženje u grupu <b
+							th:text="${invite.roomateGroup.name}"></b>
+					</h4>
+					<p>
+						Poziva te: <b th:text="${invite.inviter.getCredentials()}"></b>
+					</p>
+					<p>
+						<a href="#" type="button"
+							th:href="@{/group/addMember/__${invite.member.id}__/__${invite.inviter.id}__}"
+							class="btn btn-primary">Prihvati</a> <a href="#" type="button"
+							th:href="@{/group/deleteInvite/{id}(id=${invite.id})}"
+							class="btn btn-secondary">Odbij</a>
+					</p>
+				</div>
+			</div>
+
+			<div th:if="${deletedInvite}">
+				<div class="alert alert-warning alert-dismissable">
+					<a href="#" class="close" data-dismiss="alert" aria-label="close">×</a>
+					Zahtjev je obrisan.
+				</div>
+			</div>
+
 		</div>
+
 
 		<div th:if="${payoffSuccess !=null} ">
 			<div class="alert alert-success alert-dismissable">
@@ -33,9 +63,39 @@
 				Uspješna isplata dugova.
 			</div>
 		</div>
-
+		<div th:if="${memberSuccess}">
+			<div class="alert alert-success alert-dismissable">
+				<a href="#" class="close" data-dismiss="alert" aria-label="close">×</a>
+				Dobrodošli u grupu!
+			</div>
+		</div>
+		<div th:if="${memberInvite}">
+			<div class="alert alert-success alert-dismissable">
+				<a href="#" class="close" data-dismiss="alert" aria-label="close">×</a>
+				Zahtjev za pridruživanje je uspješno poslan.
+			</div>
+		</div>
 
 		<div th:if="${groupExists}">
+			<div class="alert alert-info alert-dismissable"
+				th:each="invite : ${invites}" th:if="${invite.inviter == null}">
+				<div th:if="${invite.member.id != user.id}">
+					<button type="button" class="close" data-dismiss="alert"
+						aria-label="close" aria-hidden="true">×</button>
+					<h4>Zahtjev za pridruženje u grupu</h4>
+					<p>
+						Želi se pridružiti: <b th:text="${invite.member.getCredentials()}"></b>
+					</p>
+					<p>
+						<a href="#" type="button"
+							th:href="@{/group/joinMember/__${invite.member.id}__/__${user.id}__/__${invite.id}__}"
+							class="btn btn-primary">Prihvati</a> <a href="#" type="button"
+							th:href="@{/group/deleteInvite/{id}(id=${invite.id})}"
+							class="btn btn-secondary">Odbij</a>
+					</p>
+				</div>
+			</div>
+
 			<div th:if="${groupSuccess !=null} ">
 				<div class="alert alert-success alert-dismissable">
 					<a href="#" class="close" data-dismiss="alert" aria-label="close">×</a>
@@ -45,15 +105,10 @@
 			<div th:if="${deleteSuccess}">
 				<div class="alert alert-success alert-dismissable">
 					<a href="#" class="close" data-dismiss="alert" aria-label="close">×</a>
-					Uspješno obrisan račun.
+					Račun je uspješno obrisan.
 				</div>
 			</div>
-			<div th:if="${memberSuccess}">
-				<div class="alert alert-success alert-dismissable">
-					<a href="#" class="close" data-dismiss="alert" aria-label="close">×</a>
-					Uspješno dodan novi cimer.
-				</div>
-			</div>
+
 
 			<div class="row">
 				<div class="col-md-3">

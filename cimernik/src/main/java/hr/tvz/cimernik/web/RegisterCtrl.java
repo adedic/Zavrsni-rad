@@ -37,11 +37,7 @@ public class RegisterCtrl {
 			redirectAttributes.addFlashAttribute("mismatch", true);
 			return "redirect:register";
 		}
-		//matches numbers only
-		//String regexStr = "^[0-9]*$";
-
-		//matches 10-digit numbers only
-		String regexStr = "^[0-9]{10}$";
+		String regexStr = "^[0-9]{8,10}$";
 		if(phone != null){
 			if (!phone.matches(regexStr)){
 				redirectAttributes.addFlashAttribute("phoneNotDigit", true);

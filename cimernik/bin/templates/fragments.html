@@ -41,7 +41,7 @@
 						<input class="form-control form-control-danger mr-sm-2"
 							oninvalid="this.setCustomValidity('Upiši ime grupe!')"
 							oninput="setCustomValidity('')" type="text"
-							th:autofocus="autofocus" placeholder="Pronađi grupu cimera "
+							placeholder="Pronađi grupu cimera "
 							style="font-family: Arial, FontAwesome;" th:required="required"
 							name="name" id="name" />
 						<button class="btn btn-outline-primary my-2 my-sm-0" type="submit">
@@ -73,7 +73,7 @@
 			<div class="modal-dialog">
 				<div class="modal-content">
 					<div class="modal-header">
-						<h4 class="modal-title" th:text="${header}"></h4>
+						<h5 class="modal-title" th:text="${header}"></h5>
 					</div>
 					<div class="modal-body">
 						<p th:text="${message}"></p>
@@ -81,13 +81,15 @@
 					<div class="modal-footer">
 						<input type="submit" class="btn btn-outline-primary"
 							th:value="${confirmLabel}" />
-						<button type="button" class="btn btn-outline-default" data-dismiss="modal"
-							th:text="${cancelLabel}"></button>
+						<button type="button" class="btn btn-outline-default"
+							data-dismiss="modal" th:text="${cancelLabel}"></button>
 					</div>
 				</div>
 			</div>
 		</div>
+
 	</th:block>
+
 
 	<th:block th:fragment="footer">
 		<footer class="footer">

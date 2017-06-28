@@ -34,6 +34,24 @@ CREATE TABLE IF NOT EXISTS user (
 ENGINE = InnoDB;
 
 -- -----------------------------------------------------
+-- Table invite
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS invite (
+  id INT(11) IDENTITY PRIMARY KEY,
+  group_id INT NOT NULL,
+  user_id INT NOT NULL,
+  inviter_id INT,
+  FOREIGN KEY (group_id)
+  REFERENCES roomate_group (id),
+  FOREIGN KEY (user_id)
+  REFERENCES user (id),
+  FOREIGN KEY (inviter_id)
+  REFERENCES user (id)
+  )
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
 -- Table user_role
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS user_role (

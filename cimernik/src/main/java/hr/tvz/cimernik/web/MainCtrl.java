@@ -24,10 +24,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import hr.tvz.cimernik.db.BillRepository;
 import hr.tvz.cimernik.db.CategoryRepository;
+import hr.tvz.cimernik.db.InviteRepository;
 import hr.tvz.cimernik.db.RoomateGroupRepository;
 import hr.tvz.cimernik.db.UserRepository;
 import hr.tvz.cimernik.model.Bill;
 import hr.tvz.cimernik.model.Category;
+import hr.tvz.cimernik.model.Invite;
 import hr.tvz.cimernik.model.RoomateGroup;
 import hr.tvz.cimernik.model.User;
 
@@ -42,22 +44,23 @@ public final class MainCtrl {
 	BillRepository billRepository;
 	@Autowired
 	CategoryRepository categoryRepository;
-	
+	@Autowired
+	InviteRepository inviteRepository;
 
 	// svi računi korisnika
 	@GetMapping("/bills/{id}")
 	String showUserBills(@PathVariable Integer id, Model model, Principal principal,
 			@RequestParam(value = "deleteSuccess", required = false) String deleteSuccess) {
 		User user = userRepository.findOne(id);
-	
-		if(user.getRoomateGroup()==null){
+
+		if (user.getRoomateGroup() == null) {
 			return "redirect:/";
 		}
 		boolean isRoomate = true;
-		if(user.equals(userRepository.findOneByUsername(principal.getName()))){
-			isRoomate=false;
+		if (user.equals(userRepository.findOneByUsername(principal.getName()))) {
+			isRoomate = false;
 		}
-		model.addAttribute("isRoomate",isRoomate);
+		model.addAttribute("isRoomate", isRoomate);
 		model.addAttribute("user", user);
 
 		if (user.getRoomateGroup() == null) {
@@ -77,9 +80,66 @@ public final class MainCtrl {
 	}
 
 	@GetMapping("/deleteBill/{id}")
-	String deleteBill(@PathVariable Integer id, Model model, Principal principal) {
+	String deleteBill(@PathVariable Integer id) {
 		billRepository.delete(billRepository.findOne(id));
 		return "redirect:/group/dashboard?deleteSuccess=true";
+	}
+
+	@GetMapping("/deleteInvite/{id}")
+	String deleteInvite(@PathVariable Integer id, Principal principal) {
+		inviteRepository.delete(inviteRepository.findOne(id));
+		return "redirect:/group/dashboard?deletedInvite=true";
+	}
+
+	@GetMapping("/joinGroup/{groupId}/{memberId}")
+	String joinGroupInvite(@PathVariable("groupId") Integer groupId, @PathVariable("memberId") Integer memberId) {
+		System.out.println("evo me join");
+
+		User member = userRepository.findOne(memberId);
+		RoomateGroup group = groupRepository.findOne(groupId);
+
+		Invite invite = new Invite(group, member, null);
+		inviteRepository.save(invite);
+		
+		member.setInvites(invite);
+		userRepository.save(member);
+		return "redirect:/group/dashboard?memberInvite=true";
+	}
+	@GetMapping("/joinMember/{memberId}/{userId}/{inviteId}")
+	String joinMember(@PathVariable("memberId") Integer memberId, @PathVariable("userId") Integer userId, @PathVariable("inviteId") Integer inviteId,
+			Model model, Principal principal) {
+		User member = userRepository.findOne(memberId);
+		User user = userRepository.findOne(userId);
+		RoomateGroup group = user.getRoomateGroup();
+		List<User> members = group.getMembers();
+		members.add(member);
+		group.setMembers(members);
+		member.setRoomateGroup(group);
+		userRepository.save(member);
+		groupRepository.save(group);
+		inviteRepository.delete(inviteRepository.findOne(inviteId));
+		return "redirect:/group/dashboard?memberSuccess=true";
+		
+	}
+
+	@GetMapping("/addMember/{memberId}/{inviterId}")
+	String addMemberInvite(@PathVariable("memberId") Integer memberId, @PathVariable("inviterId") Integer inviterId,
+			Model model, Principal principal) {
+
+		User member = userRepository.findOne(memberId);
+		User inviter = userRepository.findOne(inviterId);
+		RoomateGroup group = inviter.getRoomateGroup();
+		//Invite invite = new Invite(group, member, inviter);
+		//inviteRepository.save(invite);
+		//member.setInvites(invite);
+		List<User> members = group.getMembers();
+		members.add(member);
+		group.setMembers(members);
+		member.setRoomateGroup(group);
+		userRepository.save(member);
+		groupRepository.save(group);
+
+		return "redirect:/group/dashboard?memberSuccess=true";
 	}
 
 	@GetMapping("/dashboard")
@@ -88,13 +148,15 @@ public final class MainCtrl {
 			@RequestParam(value = "leaveSuccess", required = false) String leaveSuccess,
 			@RequestParam(value = "groupSuccess", required = false) String groupSuccess,
 			@RequestParam(value = "deleteSuccess", required = false) String deleteSuccess,
-			@RequestParam(value = "memberSuccess", required = false) String memberSuccess) {
+			@RequestParam(value = "memberSuccess", required = false) String memberSuccess,
+			@RequestParam(value = "memberInvite", required = false) String memberInvite) {
 
 		User user = userRepository.findOneByUsername(principal.getName());
 		model.addAttribute("user", user);
 
 		RoomateGroup currentGroup = null;
 		List<User> members = new ArrayList<>();
+
 		boolean groupExists = user.getRoomateGroup() != null;
 		if (groupExists) {
 			currentGroup = user.getRoomateGroup();
@@ -107,6 +169,16 @@ public final class MainCtrl {
 			}
 			model.addAttribute("membersExists", membersExists);
 		}
+
+		List<Invite> invites = inviteRepository.findAllByRoomateGroup(currentGroup);
+		List<Invite> invitesJoin = inviteRepository.findAllByMember(user);
+		if (!invitesJoin.isEmpty()) {
+			invitesJoin = invitesJoin.stream().filter(i -> i.getInviter() != null && i.getMember().equals(user))
+					.collect(Collectors.toList());
+		}
+
+		model.addAttribute("invitesJoin", invitesJoin);
+		model.addAttribute("invites", invites);
 
 		model.addAttribute("groupExists", groupExists);
 		List<Bill> bills = billRepository.findAllByUser(user);
@@ -141,6 +213,7 @@ public final class MainCtrl {
 		model.addAttribute("groupSuccess", groupSuccess);
 		model.addAttribute("deleteSuccess", deleteSuccess);
 		model.addAttribute("memberSuccess", memberSuccess);
+		model.addAttribute("memberInvite", memberInvite);
 
 		return "dashboard";
 	}
@@ -172,21 +245,28 @@ public final class MainCtrl {
 
 		return "redirect:dashboard?leaveSuccess=true";
 	}
-	
+
+	@GetMapping("/search")
+	String search() {
+		return "redirect:/";
+	}
+
 	@PostMapping("/search")
-	String findGroup(Model model, Principal principal, @RequestParam("name") String name){
+	String findGroup(Model model, Principal principal, @RequestParam("name") String name) {
 		User user = userRepository.findOneByUsername(principal.getName());
-		//ako ima grupu redirect
-		if(user.getRoomateGroup() != null){
-			model.addAttribute("groupExists",true);
+		// ako ima grupu redirect
+		if (user.getRoomateGroup() != null) {
+			model.addAttribute("groupExists", true);
 		}
-		List<RoomateGroup> groups = groupRepository.findAll().stream().filter(g -> g.getName().toLowerCase().contains(name.toLowerCase())).collect(Collectors.toList());
-		model.addAttribute("groups",groups);
-		model.addAttribute("query",name);
-		
-		
+		List<RoomateGroup> groups = groupRepository.findAll().stream()
+				.filter(g -> g.getName().toLowerCase().contains(name.toLowerCase())).collect(Collectors.toList());
+		model.addAttribute("groups", groups);
+		model.addAttribute("user", user);
+		model.addAttribute("query", name);
+
 		return "groups";
 	}
+
 	@GetMapping("/new")
 	String showFormNewGroup(Model model, Principal principal) {
 		model.addAttribute("roomateGroup", new RoomateGroup());
@@ -197,47 +277,44 @@ public final class MainCtrl {
 		}
 		return "newGroup";
 	}
-	
-	
 
 	@PostMapping("/new")
-	String saveGroup(Model model, Principal principal /*, @RequestParam("member[]") List<String> userStrings*/,
-			@Valid @ModelAttribute("roomateGroup") RoomateGroup roomateGroup, BindingResult bindingResult) {
-		
-		if(bindingResult.hasErrors()) return  "newGroup";
-		
+	String saveGroup(Model model,
+			Principal principal /*
+								 * , @RequestParam("member[]") List<String>
+								 * userStrings
+								 */, @Valid @ModelAttribute("roomateGroup") RoomateGroup roomateGroup,
+			BindingResult bindingResult) {
+
+		if (bindingResult.hasErrors())
+			return "newGroup";
+
 		List<User> members = new ArrayList<>();
 		User currentUser = userRepository.findOneByUsername(principal.getName());
 		members.add(currentUser);
-/*
-		for (String userString : userStrings) {
-			
-			if(userString.equals(currentUser.getUsername())){
-				System.out.println("isti");
-				
-			}
-			User u = userRepository.findOneByUsername(userString);
-			if(MemberCtrl.validateUserInputError(model, members, userString, u, currentUser)){
-				return "newGroup";
-			}
-		}
-*/
+		/*
+		 * for (String userString : userStrings) {
+		 * 
+		 * if(userString.equals(currentUser.getUsername())){
+		 * System.out.println("isti");
+		 * 
+		 * } User u = userRepository.findOneByUsername(userString);
+		 * if(MemberCtrl.validateUserInputError(model, members, userString, u,
+		 * currentUser)){ return "newGroup"; } }
+		 */
 		RoomateGroup newGroup = new RoomateGroup(roomateGroup.getName(), members);
 		groupRepository.save(newGroup);
-		
+
 		currentUser.setRoomateGroup(newGroup);
 		userRepository.save(currentUser);
 		/*
-		for (User u : members) {
-			u.setRoomateGroup(newGroup);
-			userRepository.save(u);
-		}*/
+		 * for (User u : members) { u.setRoomateGroup(newGroup);
+		 * userRepository.save(u); }
+		 */
 		groupRepository.save(newGroup);
 
 		return "redirect:dashboard?groupSuccess=true";
 	}
-	
-
 
 	@Autowired
 	CategoryRepository cr;
@@ -249,7 +326,8 @@ public final class MainCtrl {
 		if (user.getRoomateGroup() == null) {
 			return new BigDecimal(0);
 		}
-		BigDecimal avg = sum.divide(new BigDecimal(user.getRoomateGroup().getMembers().size()), 2, RoundingMode.HALF_UP);
+		BigDecimal avg = sum.divide(new BigDecimal(user.getRoomateGroup().getMembers().size()), 2,
+				RoundingMode.HALF_UP);
 
 		BigDecimal expenses = billRepository.findAllByUserAndRoomateGroup(user, user.getRoomateGroup()).stream()
 				.map(bill -> bill.getPrice()).reduce(new BigDecimal(0), (a, b) -> a.add(b));
@@ -258,13 +336,13 @@ public final class MainCtrl {
 	}
 
 	public boolean payoff(User user) {
-		
+
 		BigDecimal debt = debt(user);
-		//model.addAttribute("debt", debt);
+		// model.addAttribute("debt", debt);
 		if (debt.compareTo(new BigDecimal(0)) >= 0) {
 			return false;
 		}
-		//oni kojima treba novac
+		// oni kojima treba novac
 		List<User> creditors = user.getRoomateGroup().getMembers().stream()
 				.filter(m -> debt(m).compareTo(new BigDecimal(0)) > 0).collect(Collectors.toList());
 		BigDecimal creditSum = creditors.stream().map(c -> debt(c)).reduce(new BigDecimal(0), (a, b) -> a.add(b));
@@ -276,7 +354,8 @@ public final class MainCtrl {
 			BigDecimal credit = debt(c);
 			BigDecimal creditRatio = credit.divide(creditSum, 2, RoundingMode.HALF_UP);
 			BigDecimal payedCredit = creditRatio.multiply(debt);
-			return new Bill(c, c.getRoomateGroup(), "Isplata duga", payedCredit.setScale(2, RoundingMode.CEILING), date, "", payoffCategory);
+			return new Bill(c, c.getRoomateGroup(), "Isplata duga", payedCredit.setScale(2, RoundingMode.CEILING), date,
+					"", payoffCategory);
 		}).collect(Collectors.toList());
 
 		Bill bill = new Bill(user, user.getRoomateGroup(), "Isplata duga", debt.negate(), date, "", payoffCategory);

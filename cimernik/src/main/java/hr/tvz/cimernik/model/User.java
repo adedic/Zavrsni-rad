@@ -61,6 +61,9 @@ public class User implements Serializable {
 	@Getter
 	@Setter
 	private boolean enabled;
+	@Getter
+	@OneToMany(mappedBy = "member", cascade = { CascadeType.ALL }, orphanRemoval = true)
+	private List<Invite> invites;
 
 	@Getter
 	@OneToMany(mappedBy = "user", fetch = FetchType.EAGER, cascade = { CascadeType.ALL }, orphanRemoval = true)
@@ -95,6 +98,9 @@ public class User implements Serializable {
 			newRole.setRole(role);
 			roleList.add(newRole);
 		}
+	}
+	public void setInvites(Invite invite){
+		this.invites.add(invite);
 	}
 	
 
