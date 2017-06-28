@@ -68,12 +68,7 @@ public class User implements Serializable {
 	@Getter
 	@OneToMany(mappedBy = "user", fetch = FetchType.EAGER, cascade = { CascadeType.ALL }, orphanRemoval = true)
 	private List<Role> roleList;
-	/*
-	@Getter
-	@Setter
-	private boolean inviteId;
-	*/
-	
+
 
 	public String getCredentials() {
 		return this.name + " " + this.surname;

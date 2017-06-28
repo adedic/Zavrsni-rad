@@ -26,7 +26,7 @@
 			<br></br> <a th:href="@{/group/new}" class="btn btn-outline-primary">Napravi
 				grupu</a> <br></br> <br></br>
 			<div class="alert alert-info alert-dismissable"
-				th:each="invite : ${invitesJoin}" >
+				th:each="invite : ${invitesFromUsers}">
 				<div>
 					<button type="button" class="close" data-dismiss="alert"
 						aria-label="close" aria-hidden="true">×</button>
@@ -39,7 +39,7 @@
 					</p>
 					<p>
 						<a href="#" type="button"
-							th:href="@{/group/addMember/__${invite.member.id}__/__${invite.inviter.id}__}"
+							th:href="@{/group/addMember/__${invite.member.id}__/__${invite.inviter.id}__/__${invite.roomateGroup.id}__/__${invite.id}__}"
 							class="btn btn-primary">Prihvati</a> <a href="#" type="button"
 							th:href="@{/group/deleteInvite/{id}(id=${invite.id})}"
 							class="btn btn-secondary">Odbij</a>
@@ -63,12 +63,14 @@
 				Uspješna isplata dugova.
 			</div>
 		</div>
+		<!-- 
 		<div th:if="${memberSuccess}">
 			<div class="alert alert-success alert-dismissable">
 				<a href="#" class="close" data-dismiss="alert" aria-label="close">×</a>
 				Dobrodošli u grupu!
 			</div>
 		</div>
+		 -->
 		<div th:if="${memberInvite}">
 			<div class="alert alert-success alert-dismissable">
 				<a href="#" class="close" data-dismiss="alert" aria-label="close">×</a>
@@ -78,7 +80,8 @@
 
 		<div th:if="${groupExists}">
 			<div class="alert alert-info alert-dismissable"
-				th:each="invite : ${invites}" th:if="${invite.inviter == null}">
+				th:each="invite : ${invitesFromGroup}"
+				th:if="${invite.inviter == null}">
 				<div th:if="${invite.member.id != user.id}">
 					<button type="button" class="close" data-dismiss="alert"
 						aria-label="close" aria-hidden="true">×</button>
@@ -126,10 +129,11 @@
 							th:text="'Isplata dugova'"></span> </a>
 					</div>
 					<div th:if="!${hasDebt}">
-						<p th:text="'Duguju ti: ' + ${debt} + ' kn'"></p>
+						<p th:text="'Cimeri ti duguju: ' + ${debt} + ' kn'"></p>
 					</div>
-
-					<p th:text="'Potrošnja ovaj mjesec: ' + ${monthExpense} + ' kn'"></p>
+					<br></br>
+					<p
+						th:text="'Potrošnja ovaj mjesec: ' + ${#numbers.formatDecimal(monthExpense, 1, 'COMMA', 2, 'POINT')}+ ' kn'"></p>
 					<h2>
 						<small>Tvoji cimeri:</small>
 					</h2>
@@ -165,6 +169,7 @@
 										<i class="fa fa-sign-out" aria-hidden="true"></i> Napusti
 										grupu
 									</button>
+
 									<div
 										th:replace="fragments :: alertModal(header='Napuštanje grupe', 
 									message='Jeste li sigurni da želite napustiti grupu?',
@@ -179,7 +184,10 @@
 
 
 					</div>
-
+					<h6>
+						<span>Datum kreiranja: </span><span class="badge badge-primary"
+							th:text="${#dates.format(group.dateCreated, 'dd.MM.YYYY.')}"></span>
+					</h6>
 					<br></br>
 					<div th:if="!${groupBillsExists}">
 						<div class="alert alert-warning alert-dismissable">
@@ -187,54 +195,63 @@
 							U grupi nema nijednog računa.
 						</div>
 					</div>
-					<div class="card" th:each="bill : ${groupBills}">
-						<div class="card-header" role="tab" th:attr="id=${bill.title}">
 
-							<div>
-								<div class="row media">
-									<div class="col-md-3 media-left">
-										<span class="badge badge-default media-object"
-											th:text="${#dates.format(bill.dateCreated, 'dd.MM.YYYY.')}"></span>
+					<div class="card" th:each="e : ${billsMap}">
+						
+							<div class="badge badge-default"
+								th:text="${e.key} + ' ' + ${#dates.year(#dates.createNow())}"></div>
+				
+						<div th:each="bill : ${e.value}">
 
-									</div>
-									<div class="media-body row">
-										<div class="col-md-10">
-											<h4 class="mb-0">
-												<a class="hidden-xs" data-toggle="collapse"
-													data-parent="#accordion" aria-expanded="true"
-													th:attr="aria-controls='collapse'+ ${bill.id}, href='#'+'collapse' +
-											${bill.id}"
-													th:text="${bill.title}"></a>
-											</h4>
-											<p>
-												By <b th:text="${bill.user.username}"></b>
-											</p>
+							<div class="card-header" role="tab" th:attr="id=${bill.title}">
+
+								<div>
+									<div class="row media">
+										<div class="col-md-3 media-left">
+											<span class="badge badge-default media-object"
+												th:text="${#dates.format(bill.dateCreated, 'dd.MM.YYYY.')}"></span>
+
 										</div>
-										<div th:if="${bill.user == user}" class="col-md-2"
-											style="margin-top: 15px">
-											<a th:href="@{/group/deleteBill/{id}(id=${bill.id}) }"><i
-												class="fa fa-trash" aria-hidden="true"
-												style="font-size: 2em;"></i> </a>
+										<div class="media-body row">
+											<div class="col-md-10">
+												<h4 class="mb-0">
+													<a class="hidden-xs" data-toggle="collapse"
+														data-parent="#accordion" aria-expanded="true"
+														th:attr="aria-controls='collapse'+ ${bill.id}, href='#'+'collapse' +
+											${bill.id}"
+														th:text="${bill.title}"></a>
+												</h4>
+												<p>
+													By <b th:text="${bill.user.username}"></b>
+												</p>
+											</div>
+											<div th:if="${bill.user == user}" class="col-md-2"
+												style="margin-top: 15px">
+												<a th:href="@{/group/deleteBill/{id}(id=${bill.id}) }"><i
+													class="fa fa-trash" aria-hidden="true"
+													style="font-size: 2em;"></i> </a>
+											</div>
 										</div>
 									</div>
 								</div>
 							</div>
-						</div>
 
-						<div
-							th:attr="id='collapse'+ ${bill.id},aria-labeledby=${bill.title}"
-							class="collapse" role="tabpanel">
-							<div class="card-block">
-								<h4 th:text="${bill.title}"></h4>
-								<small
-									th:text="${#dates.format(bill.dateCreated, 'dd.MM.YYYY.')}"></small>
-								<span class="badge badge-info media-object"
-									th:text="${bill.category.getDescription()}"></span>
-								<p class="hidden-xs" th:text="${bill.price}+ ' kn'"></p>
-								<p class="hidden-xs" th:text="${bill.description}"></p>
-								<p>
-									Račun napravio: <b th:text="${bill.user.username}"></b>
-								</p>
+							<div
+								th:attr="id='collapse'+ ${bill.id},aria-labeledby=${bill.title}"
+								class="collapse" role="tabpanel">
+								<div class="card-block">
+									<h4 th:text="${bill.title}"></h4>
+									<small
+										th:text="${#dates.format(bill.dateCreated, 'dd.MM.YYYY.')}"></small>
+									<span class="badge badge-info media-object"
+										th:text="${bill.category.getDescription()}"></span>
+									<p class="hidden-xs"
+										th:text="${#numbers.formatDecimal(bill.price, 1, 'COMMA', 2, 'POINT')}+ ' kn'"></p>
+									<p class="hidden-xs" th:text="${bill.description}"></p>
+									<p>
+										Račun napravio: <b th:text="${bill.user.username}"></b>
+									</p>
+								</div>
 							</div>
 						</div>
 					</div>
@@ -248,7 +265,5 @@
 
 
 	</th:block>
-
-
 </body>
 </html>

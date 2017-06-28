@@ -6,7 +6,10 @@ import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import javax.validation.Valid;
@@ -21,6 +24,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import hr.tvz.cimernik.db.BillRepository;
 import hr.tvz.cimernik.db.CategoryRepository;
@@ -66,7 +70,7 @@ public final class MainCtrl {
 		if (user.getRoomateGroup() == null) {
 			return "redirect:dashboard";
 		}
-		// račune po mjesecima
+
 		List<Bill> bills = billRepository.findAllByUser(user);
 		boolean billsExists = !bills.isEmpty();
 		if (billsExists) {
@@ -79,35 +83,24 @@ public final class MainCtrl {
 		return "userBills";
 	}
 
+	// brisanje računa
 	@GetMapping("/deleteBill/{id}")
 	String deleteBill(@PathVariable Integer id) {
 		billRepository.delete(billRepository.findOne(id));
 		return "redirect:/group/dashboard?deleteSuccess=true";
 	}
 
+	// odbijanje invitea
 	@GetMapping("/deleteInvite/{id}")
 	String deleteInvite(@PathVariable Integer id, Principal principal) {
 		inviteRepository.delete(inviteRepository.findOne(id));
 		return "redirect:/group/dashboard?deletedInvite=true";
 	}
 
-	@GetMapping("/joinGroup/{groupId}/{memberId}")
-	String joinGroupInvite(@PathVariable("groupId") Integer groupId, @PathVariable("memberId") Integer memberId) {
-		System.out.println("evo me join");
-
-		User member = userRepository.findOne(memberId);
-		RoomateGroup group = groupRepository.findOne(groupId);
-
-		Invite invite = new Invite(group, member, null);
-		inviteRepository.save(invite);
-		
-		member.setInvites(invite);
-		userRepository.save(member);
-		return "redirect:/group/dashboard?memberInvite=true";
-	}
+	// prihvat clana u grupu - sam posalo zahtjev
 	@GetMapping("/joinMember/{memberId}/{userId}/{inviteId}")
-	String joinMember(@PathVariable("memberId") Integer memberId, @PathVariable("userId") Integer userId, @PathVariable("inviteId") Integer inviteId,
-			Model model, Principal principal) {
+	String joinMember(@PathVariable("memberId") Integer memberId, @PathVariable("userId") Integer userId,
+			@PathVariable("inviteId") Integer inviteId, Model model, Principal principal) {
 		User member = userRepository.findOne(memberId);
 		User user = userRepository.findOne(userId);
 		RoomateGroup group = user.getRoomateGroup();
@@ -119,25 +112,35 @@ public final class MainCtrl {
 		groupRepository.save(group);
 		inviteRepository.delete(inviteRepository.findOne(inviteId));
 		return "redirect:/group/dashboard?memberSuccess=true";
-		
+
 	}
 
-	@GetMapping("/addMember/{memberId}/{inviterId}")
-	String addMemberInvite(@PathVariable("memberId") Integer memberId, @PathVariable("inviterId") Integer inviterId,
-			Model model, Principal principal) {
+	// pozvani član prihvatio poziv u grupu
+	@GetMapping("/addMember/{memberId}/{inviterId}/{groupId}/{inviteId}")
+	String addMemberAcceptedInvite(@PathVariable("memberId") Integer memberId,
+			@PathVariable("inviterId") Integer inviterId, @PathVariable("groupId") Integer groupId, Model model,
+			@PathVariable("inviteId") Integer inviteId, Principal principal) {
 
 		User member = userRepository.findOne(memberId);
+		RoomateGroup group = null;
 		User inviter = userRepository.findOne(inviterId);
-		RoomateGroup group = inviter.getRoomateGroup();
-		//Invite invite = new Invite(group, member, inviter);
-		//inviteRepository.save(invite);
-		//member.setInvites(invite);
-		List<User> members = group.getMembers();
+		if (inviter.getRoomateGroup() != null) {
+			group = inviter.getRoomateGroup();
+		}
+
+		group = groupRepository.findOne(groupId);
+
+		List<User> members = new ArrayList<>();
+		if (group.getMembers() != null) {
+			members = group.getMembers();
+		}
 		members.add(member);
 		group.setMembers(members);
 		member.setRoomateGroup(group);
 		userRepository.save(member);
 		groupRepository.save(group);
+
+		inviteRepository.delete(inviteRepository.findOne(inviteId));
 
 		return "redirect:/group/dashboard?memberSuccess=true";
 	}
@@ -167,41 +170,110 @@ public final class MainCtrl {
 			if (membersExists) {
 				model.addAttribute("members", members);
 			}
-			model.addAttribute("membersExists", membersExists);
-		}
 
-		List<Invite> invites = inviteRepository.findAllByRoomateGroup(currentGroup);
-		List<Invite> invitesJoin = inviteRepository.findAllByMember(user);
-		if (!invitesJoin.isEmpty()) {
-			invitesJoin = invitesJoin.stream().filter(i -> i.getInviter() != null && i.getMember().equals(user))
-					.collect(Collectors.toList());
-		}
 
-		model.addAttribute("invitesJoin", invitesJoin);
-		model.addAttribute("invites", invites);
+			// member success- dobrodosli
+			//
+			/*if (inviteRepository.findAllByRoomateGroupAndMember(currentGroup, user).isEmpty()) {
+				model.addAttribute("memberSuccess", true);
+				memberSuccess = "true";
+			}*/
+		}
+		// pozivi na pridruzenje poslani od grupe
+		List<Invite> invitesFromGroup = inviteRepository.findAllByRoomateGroup(currentGroup);
+		// zahtjevi za pridruženje poslani od drugih usera
+		List<Invite> invitesFromUsers = inviteRepository.findAllByMember(user);
+
+		if (!invitesFromUsers.isEmpty()) {
+			invitesFromUsers = invitesFromUsers.stream()
+					.filter(i -> i.getInviter() != null && i.getMember().equals(user)).collect(Collectors.toList());
+		}
+		model.addAttribute("invitesFromUsers", invitesFromUsers);
+		model.addAttribute("invitesFromGroup", invitesFromGroup);
 
 		model.addAttribute("groupExists", groupExists);
-		List<Bill> bills = billRepository.findAllByUser(user);
-		List<Bill> groupBills = billRepository.findAllByRoomateGroup(currentGroup);
-		boolean groupBillsExists = !groupBills.isEmpty();
+		// račune po GODINI pa mjesecima mapa
 
-		if (groupBillsExists) {
-			model.addAttribute("groupBills", groupBills);
-		}
-		model.addAttribute("groupBillsExists", groupBillsExists);
+		LinkedHashMap <String, List<Bill>> billsMap = new LinkedHashMap<String, List<Bill>>();
 
+
+		billsMap.put("Siječanj", billRepository.findAllByDateCreatedLike(1, currentGroup));
+		billsMap.put("Veljača", billRepository.findAllByDateCreatedLike(2, currentGroup));
+		billsMap.put("Ožujak", billRepository.findAllByDateCreatedLike(3, currentGroup));
+		billsMap.put("Travanj", billRepository.findAllByDateCreatedLike(4, currentGroup));
+		billsMap.put("Svibanj", billRepository.findAllByDateCreatedLike(5, currentGroup));
+		billsMap.put("Lipanj", billRepository.findAllByDateCreatedLike(6, currentGroup));
+		billsMap.put("Srpanj", billRepository.findAllByDateCreatedLike(7, currentGroup));
+		billsMap.put("Kolovoz", billRepository.findAllByDateCreatedLike(8, currentGroup));
+		billsMap.put("Rujan", billRepository.findAllByDateCreatedLike(9, currentGroup));
+		billsMap.put("Listopad", billRepository.findAllByDateCreatedLike(10, currentGroup));
+		billsMap.put("Studeni", billRepository.findAllByDateCreatedLike(11, currentGroup));
+		billsMap.put("Prosinac", billRepository.findAllByDateCreatedLike(12, currentGroup));
+		
+		LinkedHashMap <String, List<Bill>> userBillsMap = new LinkedHashMap<String, List<Bill>>();
+		userBillsMap.put("Siječanj", billRepository.findAllByDateCreatedAndUserLike(1, currentGroup, user));
+		userBillsMap.put("Veljača", billRepository.findAllByDateCreatedAndUserLike(2, currentGroup, user));
+		userBillsMap.put("Ožujak", billRepository.findAllByDateCreatedAndUserLike(3, currentGroup, user));
+		userBillsMap.put("Travanj", billRepository.findAllByDateCreatedAndUserLike(4, currentGroup, user));
+		userBillsMap.put("Svibanj", billRepository.findAllByDateCreatedAndUserLike(5, currentGroup, user));
+		userBillsMap.put("Lipanj", billRepository.findAllByDateCreatedAndUserLike(6, currentGroup, user));
+		userBillsMap.put("Srpanj", billRepository.findAllByDateCreatedAndUserLike(7, currentGroup, user));
+		userBillsMap.put("Kolovoz", billRepository.findAllByDateCreatedAndUserLike(8, currentGroup, user));
+		userBillsMap.put("Rujan", billRepository.findAllByDateCreatedAndUserLike(9, currentGroup, user));
+		userBillsMap.put("Listopad", billRepository.findAllByDateCreatedAndUserLike(10, currentGroup, user));
+		userBillsMap.put("Studeni", billRepository.findAllByDateCreatedAndUserLike(11, currentGroup, user));
+		userBillsMap.put("Prosinac", billRepository.findAllByDateCreatedAndUserLike(12, currentGroup, user));
+	
+		
 		Calendar cal = Calendar.getInstance();
 		cal.setTime(new Date());
 		int currentMonth = cal.get(Calendar.MONTH);
-
-		BigDecimal monthExpense = new BigDecimal(0);
-
-		for (Bill b : bills) {
-			cal.setTime(b.getDateCreated());
-			if (cal.get(Calendar.MONTH) == currentMonth) {
-				monthExpense = (monthExpense.add(b.getPrice()));
+		
+		List<Bill> bills = billRepository.findAllByUser(user);
+		List<Bill> groupBills = billRepository.findAllByRoomateGroup(currentGroup);
+		List<Bill> groupBillsMonth = new ArrayList<>();
+		model.addAttribute("billsMap", billsMap);
+		model.addAttribute("userBillsMap", userBillsMap);
+		
+		for (Map.Entry<String, List<Bill>> entry : billsMap.entrySet()) {
+			if (entry.getValue() != null) {
+				for (Bill b : entry.getValue()) {
+					Calendar cal1 = Calendar.getInstance();
+					cal1.setTime(b.getDateCreated());
+					int month = cal1.get(Calendar.MONTH);
+					if(month == currentMonth){
+						groupBillsMonth.add(b);
+						model.addAttribute("groupBillsMonthMap", entry);
+					}
+				}
 			}
 		}
+
+		BigDecimal monthExpense = new BigDecimal(0);
+		
+		for (Map.Entry<String, List<Bill>> entry : userBillsMap.entrySet()) {
+			if (entry.getValue() != null) {
+				for (Bill b : entry.getValue()) {
+					Calendar cal1 = Calendar.getInstance();
+					cal1.setTime(b.getDateCreated());
+					int month = cal1.get(Calendar.MONTH);
+					if(month == currentMonth){
+						groupBillsMonth.add(b);
+						monthExpense = (monthExpense.add(b.getPrice()));
+						model.addAttribute("userBillsMonthMap", entry);
+					}
+				}
+			}
+		}
+
+
+		
+		boolean groupBillsExists = !groupBills.isEmpty();
+
+		if (groupBillsExists) {
+			model.addAttribute("groupBills", groupBillsMonth);//bez month
+		}
+		model.addAttribute("groupBillsExists", groupBillsExists);
 
 		model.addAttribute("monthExpense", monthExpense);
 		boolean hasDebt = debt(user).compareTo(new BigDecimal(0)) < 0;
@@ -224,12 +296,17 @@ public final class MainCtrl {
 		// ako je grupa napuštena provjeri za pozvane usere je li imaju
 		// inviterId od tog usera prije nego se ulogira
 		// i ako ima stavi na null
-
-		// kad se poziva novi user- naci njegov id i postaviti mu inviterId na
-		// tog usera koji ga poziva
+		// postaviti GRUPU na invite gdje je inviter ovaj user koji zeli
+		// napustit grupu
 
 		User user = userRepository.findOneByUsername(principal.getName());
 		RoomateGroup group = user.getRoomateGroup();
+
+		List<Invite> userInvites = inviteRepository.findAllByInviter(user);
+		for (Invite i : userInvites) {
+			i.setRoomateGroup(group);
+			inviteRepository.save(i);
+		}
 
 		List<User> members = new ArrayList<>();
 		for (User u : userRepository.findAllByRoomateGroup(group)) {
@@ -246,25 +323,89 @@ public final class MainCtrl {
 		return "redirect:dashboard?leaveSuccess=true";
 	}
 
+	// zahtjev za pridruzivanje grupi
+	@GetMapping("/joinGroup/{groupId}/{memberId}/{query}")
+	String joinGroupInvite(@PathVariable("groupId") Integer groupId, @PathVariable("memberId") Integer memberId,
+			@PathVariable("query") String query, RedirectAttributes redirectAttributes, Principal principal,
+			Model model) {
+		User member = userRepository.findOne(memberId);
+		RoomateGroup group = groupRepository.findOne(groupId);
+
+		Invite invite = new Invite(group, member, null);
+		Invite invite1 = inviteRepository.findOneByRoomateGroupAndMemberAndInviter(group, member, null);
+
+		if (invite1 != null) {
+			inviteRepository.delete(invite1.getId());
+			inviteRepository.save(invite);
+			redirectAttributes.addFlashAttribute("memberInvite", true);
+			redirectAttributes.addFlashAttribute("query", query);
+			showGroupsByName(principal.getName(), query, model);
+			return "/groups";
+		}
+		inviteRepository.save(invite);
+
+		member.setInvites(invite);
+		userRepository.save(member);
+
+		model.addAttribute("memberInvite", true);
+		redirectAttributes.addFlashAttribute("memberInvite", true);
+		redirectAttributes.addFlashAttribute("query", query);
+		showGroupsByName(principal.getName(), query, model);
+		return "/groups";
+	}
+
 	@GetMapping("/search")
 	String search() {
 		return "redirect:/";
 	}
 
 	@PostMapping("/search")
-	String findGroup(Model model, Principal principal, @RequestParam("name") String name) {
-		User user = userRepository.findOneByUsername(principal.getName());
-		// ako ima grupu redirect
+	String findGroup(Model model, Principal principal, @RequestParam(value = "name", required = false) String query,
+			RedirectAttributes redirectAttributes) {
+		showGroupsByName(principal.getName(), query, model);
+
+		redirectAttributes.addAttribute("query", query);
+
+		return "/groups";
+	}
+
+	@GetMapping("/groups")
+	String showGroupsByQuery(Model model, Principal principal,
+			@RequestParam(value = "memberInvite", required = false) String memberInvite,
+			@RequestParam(value = "query", required = true) String query, RedirectAttributes redirectAttributes) {
+		showGroupsByName(principal.getName(), query, model);
+		model.addAttribute("memberInvite", memberInvite);
+		redirectAttributes.addFlashAttribute("memberInvite", memberInvite);
+		redirectAttributes.addFlashAttribute("query", query);
+		return "groups";
+
+	}
+
+	void showGroupsByName(String username, String query, Model model) {
+		User user = userRepository.findOneByUsername(username);
 		if (user.getRoomateGroup() != null) {
 			model.addAttribute("groupExists", true);
 		}
 		List<RoomateGroup> groups = groupRepository.findAll().stream()
-				.filter(g -> g.getName().toLowerCase().contains(name.toLowerCase())).collect(Collectors.toList());
+				.filter(g -> g.getName().toLowerCase().contains(query.toLowerCase())).collect(Collectors.toList());
+
+		List<Invite> invitesMember = inviteRepository.findAllByMember(user);
+		model.addAttribute("hasInvite", false);
+		for (RoomateGroup g : groups) {
+			if (!invitesMember.isEmpty()) {
+				for (Invite i : invitesMember) {
+					if (g.getName().equals(i.getRoomateGroup().getName())) {// id
+						model.addAttribute("wantedGroup", i.getRoomateGroup());
+						g.setHasInvite(true);
+						model.addAttribute("hasInvite", true);
+						groupRepository.save(g);
+					}
+				}
+			}
+		}
 		model.addAttribute("groups", groups);
 		model.addAttribute("user", user);
-		model.addAttribute("query", name);
-
-		return "groups";
+		model.addAttribute("query", query);
 	}
 
 	@GetMapping("/new")
@@ -279,11 +420,7 @@ public final class MainCtrl {
 	}
 
 	@PostMapping("/new")
-	String saveGroup(Model model,
-			Principal principal /*
-								 * , @RequestParam("member[]") List<String>
-								 * userStrings
-								 */, @Valid @ModelAttribute("roomateGroup") RoomateGroup roomateGroup,
+	String saveGroup(Model model, Principal principal, @Valid @ModelAttribute("roomateGroup") RoomateGroup roomateGroup,
 			BindingResult bindingResult) {
 
 		if (bindingResult.hasErrors())
@@ -292,25 +429,13 @@ public final class MainCtrl {
 		List<User> members = new ArrayList<>();
 		User currentUser = userRepository.findOneByUsername(principal.getName());
 		members.add(currentUser);
-		/*
-		 * for (String userString : userStrings) {
-		 * 
-		 * if(userString.equals(currentUser.getUsername())){
-		 * System.out.println("isti");
-		 * 
-		 * } User u = userRepository.findOneByUsername(userString);
-		 * if(MemberCtrl.validateUserInputError(model, members, userString, u,
-		 * currentUser)){ return "newGroup"; } }
-		 */
+
 		RoomateGroup newGroup = new RoomateGroup(roomateGroup.getName(), members);
 		groupRepository.save(newGroup);
 
 		currentUser.setRoomateGroup(newGroup);
 		userRepository.save(currentUser);
-		/*
-		 * for (User u : members) { u.setRoomateGroup(newGroup);
-		 * userRepository.save(u); }
-		 */
+
 		groupRepository.save(newGroup);
 
 		return "redirect:dashboard?groupSuccess=true";
@@ -326,7 +451,8 @@ public final class MainCtrl {
 		if (user.getRoomateGroup() == null) {
 			return new BigDecimal(0);
 		}
-		BigDecimal avg = sum.divide(new BigDecimal(user.getRoomateGroup().getMembers().size()), 2,
+		BigDecimal avg = sum.divide(new BigDecimal(user.getRoomateGroup().getMembers().size()), 3, // bilo
+																									// 2
 				RoundingMode.HALF_UP);
 
 		BigDecimal expenses = billRepository.findAllByUserAndRoomateGroup(user, user.getRoomateGroup()).stream()
@@ -352,9 +478,9 @@ public final class MainCtrl {
 
 		List<Bill> bills = creditors.stream().map(c -> {
 			BigDecimal credit = debt(c);
-			BigDecimal creditRatio = credit.divide(creditSum, 2, RoundingMode.HALF_UP);
+			BigDecimal creditRatio = credit.divide(creditSum, 3, RoundingMode.HALF_UP);
 			BigDecimal payedCredit = creditRatio.multiply(debt);
-			return new Bill(c, c.getRoomateGroup(), "Isplata duga", payedCredit.setScale(2, RoundingMode.CEILING), date,
+			return new Bill(c, c.getRoomateGroup(), "Isplata duga", payedCredit.setScale(3, RoundingMode.HALF_UP), date,
 					"", payoffCategory);
 		}).collect(Collectors.toList());
 

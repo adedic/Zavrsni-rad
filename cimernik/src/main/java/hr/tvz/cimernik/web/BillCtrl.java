@@ -46,6 +46,9 @@ public class BillCtrl {
 	@GetMapping("/bill/new")
 	String showFormAddBill(Model model, Principal principal) {
 
+		if(userRepository.findOneByUsername(principal.getName()).getRoomateGroup() == null){
+			return "redirect:/";
+		}
 		model.addAttribute("bill", new Bill());
 		List<Category> categories = categoryRepository.findAll();
 		categories.remove(0);

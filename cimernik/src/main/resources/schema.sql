@@ -11,7 +11,8 @@ DROP TABLE IF EXISTS category;
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS roomate_group (
   id INT(11) IDENTITY PRIMARY KEY,
-  name VARCHAR(45) NOT NULL
+  name VARCHAR(45) NOT NULL,
+  date_created DATE NOT NULL,
   )
 ENGINE = InnoDB;
 
