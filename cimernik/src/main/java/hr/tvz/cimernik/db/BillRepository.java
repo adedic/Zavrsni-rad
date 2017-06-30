@@ -31,5 +31,6 @@ public interface BillRepository extends JpaRepository<Bill, Integer> {
 			+ "AND b.roomateGroup = ?2 "
 			+ "AND b.user = ?3")
 	List<Bill> findAllByDateCreatedAndUserLike(Integer month, RoomateGroup group, User user);
+	
 }
 

@@ -51,10 +51,13 @@
 					</div>
 				</div>
 
-				<div class="card" th:each="bill : ${bills}">
-					<div class="card-header" role="tab" th:attr="id=${bill.title}">
+				<div class="card" th:each="e : ${userBillsMap}">
 
-						<div>
+					<div class="badge badge-default"
+						th:text="${e.key} + ' ' + ${#dates.year(#dates.createNow())}"></div>
+
+					<div th:each="bill : ${e.value}">
+						<div class="card-header" role="tab" th:attr="id=${bill.title}">
 							<div class="row media">
 								<div class="col-md-3 media-left">
 									<span class="badge badge-default media-object"
@@ -79,26 +82,27 @@
 											class="fa fa-trash" aria-hidden="true"
 											style="font-size: 2em;"></i> </a>
 									</div>
-									
+
 								</div>
 							</div>
-						</div>
-					</div>
 
-					<div
-						th:attr="id='collapse'+ ${bill.id},aria-labeledby=${bill.title}"
-						class="collapse" role="tabpanel">
-						<div class="card-block">
-							<h4 th:text="${bill.title}"></h4>
-							<small
-								th:text="${#dates.format(bill.dateCreated, 'dd.MM.YYYY.')}"></small>
-							<span class="badge badge-info media-object"
-								th:text="${bill.category.getDescription()}"></span>
-							<p class="hidden-xs" th:text="${bill.price}+ ' kn'"></p>
-							<p class="hidden-xs" th:text="${bill.description}"></p>
-							<p>
-								Račun napravio: <b th:text="${bill.user.username}"></b>
-							</p>
+						</div>
+
+						<div
+							th:attr="id='collapse'+ ${bill.id},aria-labeledby=${bill.title}"
+							class="collapse" role="tabpanel">
+							<div class="card-block">
+								<h4 th:text="${bill.title}"></h4>
+								<small
+									th:text="${#dates.format(bill.dateCreated, 'dd.MM.YYYY.')}"></small>
+								<span class="badge badge-info media-object"
+									th:text="${bill.category.getDescription()}"></span>
+								<p class="hidden-xs" th:text="${bill.price}+ ' kn'"></p>
+								<p class="hidden-xs" th:text="${bill.description}"></p>
+								<p>
+									Račun napravio: <b th:text="${bill.user.username}"></b>
+								</p>
+							</div>
 						</div>
 					</div>
 				</div>

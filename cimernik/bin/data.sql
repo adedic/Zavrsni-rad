@@ -7,9 +7,7 @@ INSERT INTO roomate_group(id, name, date_created) VALUES (3, 'Ekipa s tavana', C
 
 INSERT INTO roomate_group(id, name, date_created) VALUES (4, 'Podrumare', CURRENT_DATE()-100);
 
-INSERT INTO roomate_group(id, name, date_created) VALUES (5, 'Besparica', CURRENT_DATE()-2);
-
-INSERT INTO roomate_group(id, name, date_created) VALUES (6, 'Nemamo para', CURRENT_DATE()-5);
+INSERT INTO roomate_group(id, name, date_created) VALUES (5, 'Nemamo para', CURRENT_DATE()-2);
 
 
 
@@ -47,6 +45,9 @@ VALUES (10, 4, 'Marina','Marinić','m','$2a$04$sajsx1aReuYPVjGD/8yPDOhAUpn8HDwIb
 INSERT INTO user(id, group_id, name, surname ,username,password,enabled)
 VALUES (11, 4, 'Ana','Anić','a','$2a$04$sajsx1aReuYPVjGD/8yPDOhAUpn8HDwIbsebgSlFelXuQBPXlrCS.', true);
 
+INSERT INTO user(id, name, surname ,username,password,enabled)
+VALUES (12, 'Mara','Marić','mara','$2a$04$sajsx1aReuYPVjGD/8yPDOhAUpn8HDwIbsebgSlFelXuQBPXlrCS.', true);
+
 
 
 
@@ -70,6 +71,8 @@ INSERT INTO user_role (username, role) VALUES ('m', 'ROLE_USER');
 
 INSERT INTO user_role (username, role) VALUES ('a', 'ROLE_USER'); 
 
+INSERT INTO user_role (username, role) VALUES ('mara', 'ROLE_USER'); 
+
 
 INSERT INTO user_role (username, role) VALUES ('admin', 'ROLE_USER'); 
 
@@ -90,7 +93,7 @@ INSERT INTO category (id, description) VALUES (5, 'Nekategorizirano');
 
 
 INSERT INTO bill (id, user_id, group_id, title, price, date_created, last_update_date, description, category_id) 
-VALUES(1, 1, 1, 'Čišćenje wc-a', 0, CURRENT_DATE()+15, NULL, 'Volim cistit',  3);
+VALUES(1, 1, 1, 'Čišćenje wc-a', 0, CURRENT_DATE()-50, NULL, 'Volim cistit',  3);
 
 
 INSERT INTO bill (id, user_id, group_id, title, price, date_created, last_update_date, description, category_id) 

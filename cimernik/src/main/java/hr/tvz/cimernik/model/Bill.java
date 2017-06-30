@@ -55,7 +55,7 @@ public class Bill implements Serializable {
 
 	@Getter
 	@Setter
-	@NotNull	
+	@NotNull
 	@NotEmpty(message = "Moraš unijeti naslov.")
 	private String title;
 	@Getter
@@ -64,7 +64,6 @@ public class Bill implements Serializable {
 	@Temporal(TemporalType.DATE)
 	@Getter
 	@Setter
-
 	@Column(name = "date_created")
 	private Date dateCreated;
 
@@ -93,6 +92,5 @@ public class Bill implements Serializable {
 		this.description = description;
 		this.category = category;
 	}
-
 
 }
