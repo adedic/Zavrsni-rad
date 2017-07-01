@@ -105,6 +105,12 @@
 					Uspješno stvorena grupa cimera.
 				</div>
 			</div>
+			<div th:if="${groupEdit !=null} ">
+				<div class="alert alert-warning alert-dismissable">
+					<a href="#" class="close" data-dismiss="alert" aria-label="close">×</a>
+					Promjenjen naziv grupe.
+				</div>
+			</div>
 			<div th:if="${deleteSuccess}">
 				<div class="alert alert-success alert-dismissable">
 					<a href="#" class="close" data-dismiss="alert" aria-label="close">×</a>
@@ -137,7 +143,7 @@
 
 						<form id="payoffForm" th:if="${groupExists}" method="POST"
 							th:action="@{/group/payoff}">
-							
+
 							<a class="btn btn-outline-warning" href="#" data-toggle="modal"
 								data-target="#payoffModal"> <i class="fa fa-money"
 								aria-hidden="true"></i> Isplati dugove
@@ -149,10 +155,10 @@
 											<h5 class="modal-title" th:text="'Isplata dugova'"></h5>
 										</div>
 										<div class="modal-body" th:each="e : ${creditorDebts}">
-											<p th:if="!${e.key==user}">Plaćaš cimeru: 
-												<b th:text="${e.key.getCredentials()}"></b>
-												<small th:text="${#numbers.formatDecimal(e.value.negate(), 1, 'COMMA', 2, 'POINT')} + ' kn'"></small>
-												
+											<p th:if="!${e.key==user}">
+												Plaćaš cimeru: <b th:text="${e.key.getCredentials()}"></b> <small
+													th:text="${#numbers.formatDecimal(e.value.negate(), 1, 'COMMA', 2, 'POINT')} + ' kn'"></small>
+
 											</p>
 
 										</div>
@@ -196,9 +202,55 @@
 				<div id="accordion" role="tablist" aria-multiselectable="false"
 					class="col-md-9">
 					<div class="row">
-						<h1 class="h2 col-md-7">
-							<small>Svi troškovi grupe </small><b th:text="${group.name}"></b>
-						</h1>
+
+						<div class="col-md-7">
+							<div class="row">
+								<h1 class="h2">
+									<small>Svi troškovi grupe </small><b th:text="${group.name}"></b>
+									<a href="#" data-toggle="modal" data-target="#editGroupModal">
+										<i class="fa fa-pencil-square-o" aria-hidden="true" style="font-size: 1em;"></i>
+									</a>
+								</h1>
+								<form id="editGroupForm" th:if="${groupExists}" method="POST"
+									th:action="@{/group/edit//{id}(id=${group.id})}"
+									th:object="${roomateGroup}">
+									
+									<div class="modal fade" id="editGroupModal" role="dialog">
+										<div class="modal-dialog">
+											<div class="modal-content">
+												<div class="modal-header">
+													<h5 class="modal-title" th:text="'Promjena naziva grupe'"></h5>
+												</div>
+												<div class="modal-body">
+													<div class="col-xs-12 col-sm-6 col-md-6">
+														<div th:class="form-group"
+															th:classappend="${#fields.hasErrors('name')} ? has-danger : ''">
+															<label for="name">Novi naziv grupe:</label> <input type="text"
+																class="form-control form-control-danger"
+																th:field="*{name}" th:autofocus="autofocus" id="name"
+																th:required="required" th:placeholder="'Ime grupe'" />
+															<div class="form-control-feedback"
+																th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></div>
+														</div>
+													</div>
+
+												</div>
+												<div class="modal-footer">
+													<input type="submit" class="btn btn-outline-primary"
+														th:value="'Spremi'" />
+													<button type="button" class="btn btn-default"
+														data-dismiss="modal" th:text="'Odustani'"></button>
+												</div>
+											</div>
+										</div>
+									</div>
+
+								</form>
+							</div>
+						</div>
+
+
+
 						<div class="h2 col-md-5">
 							<div class="row">
 								<div class="col-md-6">

@@ -337,10 +337,13 @@ public final class MainCtrl {
 			@RequestParam(value = "payoffSuccess", required = false) String payoffSuccess,
 			@RequestParam(value = "leaveSuccess", required = false) String leaveSuccess,
 			@RequestParam(value = "groupSuccess", required = false) String groupSuccess,
+			@RequestParam(value = "groupEdit", required = false) String groupEdit,
 			@RequestParam(value = "deleteSuccess", required = false) String deleteSuccess,
 			@RequestParam(value = "memberSuccess", required = false) String memberSuccess,
 			@RequestParam(value = "memberInvite", required = false) String memberInvite) {
-
+		
+		model.addAttribute("roomateGroup", new RoomateGroup());
+		
 		User user = userRepository.findOneByUsername(principal.getName());
 		model.addAttribute("user", user);
 
@@ -422,6 +425,7 @@ public final class MainCtrl {
 
 		model.addAttribute("payoffSuccess", payoffSuccess);
 		model.addAttribute("leaveSuccess", leaveSuccess);
+		model.addAttribute("groupEdit", groupEdit);
 		model.addAttribute("groupSuccess", groupSuccess);
 		model.addAttribute("deleteSuccess", deleteSuccess);
 		model.addAttribute("memberSuccess", memberSuccess);
@@ -558,6 +562,30 @@ public final class MainCtrl {
 		groupRepository.save(newGroup);
 
 		return "redirect:dashboard?groupSuccess=true";
+	}
+	
+	@PostMapping("/edit/{id}")
+	String editGroup(@PathVariable("id") Integer id, Model model, Principal principal, @Valid @ModelAttribute("roomateGroup") RoomateGroup roomateGroup,
+			BindingResult bindingResult) {
+	
+		
+		if (bindingResult.hasErrors())
+			return "dashboard";
+
+		List<User> members = new ArrayList<>();
+		User currentUser = userRepository.findOneByUsername(principal.getName());
+		members.add(currentUser);
+		RoomateGroup currentGroup = groupRepository.findOne(id);
+		currentGroup.setName(roomateGroup.getName());
+		currentGroup.setMembers(members);
+		groupRepository.save(currentGroup);
+
+		currentUser.setRoomateGroup(currentGroup);
+		userRepository.save(currentUser);
+
+		groupRepository.save(currentGroup);
+
+		return "redirect:/group/dashboard?groupEdit=true";
 	}
 
 }
