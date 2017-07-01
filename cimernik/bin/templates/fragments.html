@@ -89,6 +89,28 @@
 		</div>
 
 	</th:block>
+	
+	<th:block th:fragment="payoffModal">
+		<div class="modal fade" id="payoffModal" role="dialog">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h5 class="modal-title" th:text="${header}"></h5>
+					</div>
+					<div class="modal-body">
+						<p th:text="${message}"></p>
+					</div>
+					<div class="modal-footer">
+						<input type="submit" class="btn btn-outline-primary"
+							th:value="${confirmLabel}" />
+						<button type="button" class="btn btn-outline-default"
+							data-dismiss="modal" th:text="${cancelLabel}"></button>
+					</div>
+				</div>
+			</div>
+		</div>
+
+	</th:block>
 
 
 	<th:block th:fragment="footer">

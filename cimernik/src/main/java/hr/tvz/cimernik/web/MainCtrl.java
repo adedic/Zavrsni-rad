@@ -6,9 +6,11 @@ import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.validation.Valid;
@@ -49,10 +51,7 @@ public final class MainCtrl {
 	CategoryRepository categoryRepository;
 	@Autowired
 	InviteRepository inviteRepository;
-	
-	String months[] = { "Siječanj", "Veljača", "Ožujak", "Travanj", "Svibanj", "Lipanj", "Srpanj", "Kolovoz",
-			"Rujan", "Listopad", "Studeni", "Prosinac" };
-	
+
 	// svi računi korisnika
 	@GetMapping("/bills/{id}")
 	String showUserBills(@PathVariable Integer id, Model model, Principal principal,
@@ -62,16 +61,24 @@ public final class MainCtrl {
 		if (user.getRoomateGroup() == null) {
 			return "redirect:/";
 		}
-	
+		boolean isRoomate = true;
+		if (user.equals(userRepository.findOneByUsername(principal.getName()))) {
+			isRoomate = false;
+		}
+		model.addAttribute("isRoomate", isRoomate);
 		model.addAttribute("user", user);
 
 		if (user.getRoomateGroup() == null) {
 			return "redirect:dashboard";
 		}
 
+		setDebtsToRoomates(user, model);
+		boolean hasDebt = debt(user, user).compareTo(new BigDecimal(0)) < 0;
+		model.addAttribute("hasDebt", hasDebt);
+		model.addAttribute("debt", debt(user, user));
 
-		LinkedHashMap<String, List<Bill>> userBillsMap = setUserAndGroupBills(currentMonth(), months, user.getRoomateGroup(), user);
-		
+		LinkedHashMap<String, List<Bill>> userBillsMap = setUserAndGroupBills(user.getRoomateGroup(), user);
+
 		model.addAttribute("userBillsMap", userBillsMap);
 		boolean billsExists = !userBillsMap.isEmpty();
 		if (billsExists) {
@@ -97,7 +104,7 @@ public final class MainCtrl {
 		return "redirect:/group/dashboard?deletedInvite=true";
 	}
 
-	// prihvat clana u grupu - sam poslao zahtjev
+	// prihvat člana u grupu - sam poslao zahtjev
 	@GetMapping("/joinMember/{memberId}/{userId}/{inviteId}")
 	String joinMember(@PathVariable("memberId") Integer memberId, @PathVariable("userId") Integer userId,
 			@PathVariable("inviteId") Integer inviteId, Model model, Principal principal) {
@@ -145,7 +152,7 @@ public final class MainCtrl {
 		return "redirect:/group/dashboard?memberSuccess=true";
 	}
 
-	void setInvitesFromGroupsAndUsers(RoomateGroup currentGroup, User user, Model model) {
+	public void setInvitesFromGroupsAndUsers(RoomateGroup currentGroup, User user, Model model) {
 		// pozivi na pridruzenje poslani od grupe
 		List<Invite> invitesFromGroup = inviteRepository.findAllByRoomateGroup(currentGroup);
 		// zahtjevi za pridruženje poslani od drugih usera
@@ -160,30 +167,150 @@ public final class MainCtrl {
 
 	}
 
-	LinkedHashMap<String, List<Bill>> setGroupBills(int currentMonth, String months[], RoomateGroup currentGroup) {
-		LinkedHashMap<String, List<Bill>> billsMap = new LinkedHashMap<String, List<Bill>>();
-		for (int i = 1; i <= months.length; i++) {
-			if (i - 1 <= currentMonth) {
-				if (!billRepository.findAllByDateCreatedLike(i, currentGroup).isEmpty()) {
-					billsMap.put(months[i - 1], billRepository.findAllByDateCreatedLike(i, currentGroup));
-				}
-				/*if (!billRepository.findAllByDateCreatedAndUserLike(i, currentGroup, user).isEmpty()) {
-					userBillsMap.put(months[i - 1],
-							billRepository.findAllByDateCreatedAndUserLike(i, currentGroup, user));
-				}*/
+	public void showGroupsByName(String username, String query, Model model) {
+		User user = userRepository.findOneByUsername(username);
+		if (user.getRoomateGroup() != null) {
+			model.addAttribute("groupExists", true);
+		}
+		List<RoomateGroup> groups = groupRepository.findAll().stream()
+				.filter(g -> g.getName().toLowerCase().contains(query.toLowerCase())).collect(Collectors.toList());
 
+		List<Invite> invitesMember = inviteRepository.findAllByMember(user);
+		model.addAttribute("hasInvite", false);
+		for (RoomateGroup g : groups) {
+			if (!invitesMember.isEmpty()) {
+				for (Invite i : invitesMember) {
+					if (g.getName().equals(i.getRoomateGroup().getName())) {// id
+						model.addAttribute("wantedGroup", i.getRoomateGroup());
+						g.setHasInvite(true);
+						model.addAttribute("hasInvite", true);
+						groupRepository.save(g);
+					}
+				}
 			}
 		}
-		return billsMap;
+		model.addAttribute("groups", groups);
+		model.addAttribute("user", user);
+		model.addAttribute("query", query);
 	}
-	
-	LinkedHashMap<String, List<Bill>> setUserAndGroupBills(int currentMonth, String months[], RoomateGroup currentGroup, User user) {
+
+	public BigDecimal debt(User user, User currentUser) {
+		Set<User> members = getMembersWithEx(currentUser);
+		RoomateGroup group = currentUser.getRoomateGroup();
+
+		if (group == null) {
+			return new BigDecimal(0);// kad napusti grupu
+		}
+		BigDecimal sum = billRepository.findAllByRoomateGroup(group).stream().map(bill -> bill.getPrice())
+				.reduce(new BigDecimal(0), (a, b) -> a.add(b));
+
+		BigDecimal avg = new BigDecimal(0);
+
+		if (!sum.equals(new BigDecimal(0))) {
+			avg = sum.divide(new BigDecimal(members.size()), 2, RoundingMode.HALF_EVEN);
+		}
+
+		BigDecimal expenses = billRepository.findAllByUserAndRoomateGroup(user, group).stream()
+				.map(bill -> bill.getPrice()).reduce(new BigDecimal(0), (a, b) -> a.add(b));
+
+		return expenses.subtract(avg);
+	}
+
+	public Set<User> getMembersWithEx(User currentUser) {
+		List<Bill> groupBills = billRepository.findAllByRoomateGroup(currentUser.getRoomateGroup());
+		List<User> membersAndEx = new ArrayList<>();
+		for (Bill b : groupBills) {
+			membersAndEx.add(b.getUser());
+		}
+		return new HashSet<User>(membersAndEx);
+	}
+
+	@PostMapping("/payoff")
+	String payoff(Model model, Principal principal) {
+
+		payoff(userRepository.findOneByUsername(principal.getName()), model);
+		return "redirect:dashboard?payoffSuccess=true";
+	}
+
+	public List<Bill> payoff(User user, Model model) {
+
+		BigDecimal debt = debt(user, user);
+		System.out.println("debt:" + debt);
+		if (debt.compareTo(new BigDecimal(0)) >= 0) {
+			return null;
+		}
+
+		Set<User> members = getMembersWithEx(user);
+		for (User m : members) {
+			System.out.println("members and ex:" + m.getCredentials() + "/debt membera:" + debt(m, user));
+		}
+		List<User> creditors = members.stream().filter(m -> debt(m, user).compareTo(new BigDecimal(0)) > 0)
+				.collect(Collectors.toList());
+		for (User c : creditors) {
+			System.out.println("creditor:" + c.getCredentials());
+		}
+		BigDecimal creditSum = creditors.stream().map(c -> debt(c, user)).reduce(new BigDecimal(0), (a, b) -> a.add(b));
+
+		Date date = new Date();
+		Category payoffCategory = categoryRepository.findOne(1);
+		List<Bill> bills = creditors.stream().filter(c -> !c.equals(user)).map(c -> {
+			BigDecimal credit = debt(c, user);
+			System.out.println("dug ovog creditora: " + credit + "/" + c.getCredentials());
+			BigDecimal creditRatio = credit.divide(creditSum, 2, RoundingMode.HALF_EVEN);
+			System.out.println("omjer koliko ide ovom kreditoru: " + creditRatio);
+			BigDecimal payedCredit = creditRatio.multiply(debt).setScale(2, RoundingMode.HALF_EVEN);
+			System.out.println("plaćeni iznos ovog creditora: " + payedCredit);
+			return new Bill(c, user.getRoomateGroup(), "Isplata duga", payedCredit.setScale(2, RoundingMode.HALF_EVEN),
+					date, "", payoffCategory);
+		}).collect(Collectors.toList());
+		BigDecimal billsSum = bills.stream().map(b -> b.getPrice()).reduce(new BigDecimal(0), (a, b) -> a.add(b));
+		System.out.println("suma racuna" + billsSum);
+		BigDecimal diff = billsSum.subtract(debt);
+		System.out.println("razlika:" + diff);
+		bills.get(0).setPrice(bills.get(0).getPrice().add(diff));
+
+		Bill bill = new Bill(user, user.getRoomateGroup(), "Isplata duga", debt.negate(), date, "", payoffCategory);
+		bills.add(0, bill);
+		billRepository.save(bills);
+		model.addAttribute("billsPayoff", bills);
+
+		return bills;
+
+	}
+
+	public void setDebtsToRoomates(User user, Model model) {
+		Set<User> members = getMembersWithEx(user);
+		List<User> creditors = members.stream().filter(m -> debt(m, user).compareTo(new BigDecimal(0)) > 0)
+				.collect(Collectors.toList());
+
+		LinkedHashMap<User, BigDecimal> creditorDebts = new LinkedHashMap<User, BigDecimal>();
+
+		if (!creditors.isEmpty()) {
+			BigDecimal debt = debt(user, user);
+			BigDecimal creditSum = creditors.stream().map(c -> debt(c, user)).reduce(new BigDecimal(0), (a, b) -> a.add(b));
+			for (User c : creditors) {
+				if (!c.equals(user)) {
+					
+					BigDecimal credit = debt(c, user);
+					BigDecimal creditRatio = credit.divide(creditSum, 2, RoundingMode.HALF_EVEN);
+					BigDecimal payedCredit = creditRatio.multiply(debt).setScale(2, RoundingMode.HALF_EVEN);
+					
+					creditorDebts.put(c, payedCredit);
+					System.out.println("dug; " + payedCredit + "/" + c.getCredentials());
+				}
+
+			}
+			model.addAttribute("creditorDebts", creditorDebts);
+		}
+	}
+
+	public LinkedHashMap<String, List<Bill>> setUserAndGroupBills(RoomateGroup currentGroup, User user) {
 		LinkedHashMap<String, List<Bill>> userBillsMap = new LinkedHashMap<String, List<Bill>>();
-		for (int i = 1; i <= months.length; i++) {
-			if (i - 1 <= currentMonth) {
-			
+		for (int i = 1; i <= GroupUtils.months.length; i++) {
+			if (i - 1 <= GroupUtils.currentMonth()) {
+
 				if (!billRepository.findAllByDateCreatedAndUserLike(i, currentGroup, user).isEmpty()) {
-					userBillsMap.put(months[i - 1],
+					userBillsMap.put(GroupUtils.months[i - 1],
 							billRepository.findAllByDateCreatedAndUserLike(i, currentGroup, user));
 				}
 
@@ -191,14 +318,20 @@ public final class MainCtrl {
 		}
 		return userBillsMap;
 	}
-	
-	int currentMonth(){
-		Calendar cal = Calendar.getInstance();
-		cal.setTime(new Date());
-		return cal.get(Calendar.MONTH);
-		 
+
+	public LinkedHashMap<String, List<Bill>> setGroupBills(RoomateGroup currentGroup) {
+		LinkedHashMap<String, List<Bill>> billsMap = new LinkedHashMap<String, List<Bill>>();
+		for (int i = 1; i <= GroupUtils.months.length; i++) {
+			if (i - 1 <= GroupUtils.currentMonth()) {
+				if (!billRepository.findAllByDateCreatedLike(i, currentGroup).isEmpty()) {
+					billsMap.put(GroupUtils.months[i - 1], billRepository.findAllByDateCreatedLike(i, currentGroup));
+				}
+
+			}
+		}
+		return billsMap;
 	}
-	
+
 	@GetMapping("/dashboard")
 	String showDashboard(Model model, Principal principal,
 			@RequestParam(value = "payoffSuccess", required = false) String payoffSuccess,
@@ -224,22 +357,24 @@ public final class MainCtrl {
 			if (membersExists) {
 				model.addAttribute("members", members);
 			}
+			setDebtsToRoomates(user, model);
+			// List<Bill> bills =
+			// showPayoff(userRepository.findOneByUsername(principal.getName()),
+			// model);
 
 		}
 		setInvitesFromGroupsAndUsers(currentGroup, user, model);
 
 		model.addAttribute("groupExists", groupExists);
-		
 
-		LinkedHashMap<String, List<Bill>> billsMap = setGroupBills(currentMonth(), months, currentGroup);
+		LinkedHashMap<String, List<Bill>> billsMap = setGroupBills(currentGroup);
 		model.addAttribute("billsMap", billsMap);
-		LinkedHashMap<String, List<Bill>> userBillsMap = setUserAndGroupBills(currentMonth(), months, currentGroup, user);
-		
+		LinkedHashMap<String, List<Bill>> userBillsMap = setUserAndGroupBills(currentGroup, user);
+
 		model.addAttribute("userBillsMap", userBillsMap);
-		
+
 		List<Bill> groupBills = billRepository.findAllByRoomateGroup(currentGroup);
 		List<Bill> groupBillsMonth = new ArrayList<>();
-		
 
 		for (Map.Entry<String, List<Bill>> entry : billsMap.entrySet()) {
 			if (entry.getValue() != null) {
@@ -247,7 +382,7 @@ public final class MainCtrl {
 					Calendar cal1 = Calendar.getInstance();
 					cal1.setTime(b.getDateCreated());
 					int month = cal1.get(Calendar.MONTH);
-					if (month == currentMonth()) {
+					if (month == GroupUtils.currentMonth()) {
 						groupBillsMonth.add(b);
 						model.addAttribute("groupBillsMonthMap", entry);
 					}
@@ -263,7 +398,7 @@ public final class MainCtrl {
 					Calendar cal1 = Calendar.getInstance();
 					cal1.setTime(b.getDateCreated());
 					int month = cal1.get(Calendar.MONTH);
-					if (month == currentMonth()) {
+					if (month == GroupUtils.currentMonth()) {
 						groupBillsMonth.add(b);
 						monthExpense = (monthExpense.add(b.getPrice()));
 						model.addAttribute("userBillsMonthMap", entry);
@@ -280,9 +415,10 @@ public final class MainCtrl {
 		model.addAttribute("groupBillsExists", groupBillsExists);
 
 		model.addAttribute("monthExpense", monthExpense);
-		boolean hasDebt = debt(user).compareTo(new BigDecimal(0)) < 0;
+		boolean hasDebt = debt(user, user).compareTo(new BigDecimal(0)) < 0;
+
 		model.addAttribute("hasDebt", hasDebt);
-		model.addAttribute("debt", debt(user).abs().setScale(2, RoundingMode.CEILING));
+		model.addAttribute("debt", debt(user, user).abs());
 
 		model.addAttribute("payoffSuccess", payoffSuccess);
 		model.addAttribute("leaveSuccess", leaveSuccess);
@@ -306,11 +442,10 @@ public final class MainCtrl {
 			inviteRepository.save(i);
 		}
 		List<User> members = new ArrayList<>();
-		// ako su members null
 		if (group.getMembers() != null) {
 			for (User m : group.getMembers()) {
 				if (!m.equals(user)) {
-					System.out.println(m.getCredentials());
+					System.out.println("ovo su oni članovi: " + m.getCredentials());
 					members.add(m);
 				}
 			}
@@ -325,7 +460,7 @@ public final class MainCtrl {
 		user.setRoomateGroup(null);
 		userRepository.save(user);
 		groupRepository.save(group);
-		//obrisi grupu i njene racune ako je prazna(nema članova)
+		// obrisi grupu i njene racune ako je prazna(nema članova)
 		if (members.isEmpty()) {
 			billRepository.delete(billRepository.findAllByRoomateGroup(group));
 			groupRepository.delete(group.getId());
@@ -392,33 +527,6 @@ public final class MainCtrl {
 
 	}
 
-	void showGroupsByName(String username, String query, Model model) {
-		User user = userRepository.findOneByUsername(username);
-		if (user.getRoomateGroup() != null) {
-			model.addAttribute("groupExists", true);
-		}
-		List<RoomateGroup> groups = groupRepository.findAll().stream()
-				.filter(g -> g.getName().toLowerCase().contains(query.toLowerCase())).collect(Collectors.toList());
-
-		List<Invite> invitesMember = inviteRepository.findAllByMember(user);
-		model.addAttribute("hasInvite", false);
-		for (RoomateGroup g : groups) {
-			if (!invitesMember.isEmpty()) {
-				for (Invite i : invitesMember) {
-					if (g.getName().equals(i.getRoomateGroup().getName())) {// id
-						model.addAttribute("wantedGroup", i.getRoomateGroup());
-						g.setHasInvite(true);
-						model.addAttribute("hasInvite", true);
-						groupRepository.save(g);
-					}
-				}
-			}
-		}
-		model.addAttribute("groups", groups);
-		model.addAttribute("user", user);
-		model.addAttribute("query", query);
-	}
-
 	@GetMapping("/new")
 	String showFormNewGroup(Model model, Principal principal) {
 		model.addAttribute("roomateGroup", new RoomateGroup());
@@ -452,78 +560,4 @@ public final class MainCtrl {
 		return "redirect:dashboard?groupSuccess=true";
 	}
 
-	@Autowired
-	CategoryRepository cr;
-
-	public BigDecimal debt(User user) {
-		BigDecimal sum = billRepository.findAllByRoomateGroup(user.getRoomateGroup()).stream()
-				.map(bill -> bill.getPrice()).reduce(new BigDecimal(0), (a, b) -> a.add(b));
-		System.out.println("________suma:" + sum);
-
-		BigDecimal avg = new BigDecimal(0);
-		if (!sum.equals(new BigDecimal(0))) {
-			avg = sum.divide(new BigDecimal(user.getRoomateGroup().getMembers().size()), 3, RoundingMode.CEILING);
-			System.out.println("avg:" + avg);
-		}
-		if (user.getRoomateGroup() == null) {
-			return new BigDecimal(0);
-		}
-		if (user.getRoomateGroup().getMembers().size() == 1) {
-			System.out.println("samo jedan clan");
-			System.out.println("suma:" + sum);
-			System.out.println("avg:" + avg);
-			avg = sum;
-			System.out.println("avg:" + avg);
-		}
-
-		BigDecimal expenses = billRepository.findAllByUserAndRoomateGroup(user, user.getRoomateGroup()).stream()
-				.map(bill -> bill.getPrice()).reduce(new BigDecimal(0), (a, b) -> a.add(b));
-
-		System.out.println("potrosnja usera grupe:" + avg);
-		System.out.println("dug:" + expenses.subtract(avg));
-		return expenses.subtract(avg);
-	}
-
-	public boolean payoff(User user) {
-
-		BigDecimal debt = debt(user);
-		// model.addAttribute("debt", debt);
-		if (debt.compareTo(new BigDecimal(0)) >= 0) {
-			return false;
-		}
-
-		// oni kojima treba novac
-		List<User> creditors = user.getRoomateGroup().getMembers().stream()
-				.filter(m -> debt(m).compareTo(new BigDecimal(0)) > 0).collect(Collectors.toList());
-
-		for (User c : creditors) {
-			System.out.println("aaa " + c.getCredentials());
-		}
-		BigDecimal creditSum = creditors.stream().map(c -> debt(c)).reduce(new BigDecimal(0), (a, b) -> a.add(b));
-
-		Date date = new Date();
-		Category payoffCategory = cr.findOne(1);
-		List<Bill> bills = creditors.stream().map(c -> {
-			BigDecimal credit = debt(c);
-			BigDecimal creditRatio = credit.divide(creditSum, 3, RoundingMode.HALF_UP);
-			BigDecimal payedCredit = creditRatio.multiply(debt);
-			return new Bill(c, c.getRoomateGroup(), "Isplata duga", payedCredit.setScale(3, RoundingMode.HALF_UP), date,
-					"", payoffCategory);
-		}).collect(Collectors.toList());
-
-		Bill bill = new Bill(user, user.getRoomateGroup(), "Isplata duga", debt.negate(), date, "", payoffCategory);
-		bills.add(0, bill);
-		billRepository.save(bills);
-
-		return true;
-
-	}
-
-	@GetMapping("/payoff")
-	String payoff(Model model, Principal principal) {
-		boolean payoffSuccess = payoff(userRepository.findOneByUsername(principal.getName()));
-		System.out.println(payoffSuccess);
-
-		return "redirect:dashboard?payoffSuccess=true";
-	}
 }

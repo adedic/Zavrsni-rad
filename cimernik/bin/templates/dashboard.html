@@ -122,16 +122,59 @@
 							class="list-group-item list-group-item-action">Moji troškovi</a>
 
 					</div>
-
+					<br></br>
+					<div th:if="${creditorDebts} == null">
+						<p>Nemaš dugova prema grupi.</p>
+					</div>
 					<div th:if="${hasDebt}">
-						<p th:text="'Duguješ: ' + ${debt} + ' kn'"></p>
-						<a th:href="@{/group/payoff}" class="btn btn-outline-warning"><span
-							th:text="'Isplata dugova'"></span> </a>
+						<h3>Dužan si:</h3>
+						<p th:text="'Grupi: ' + ${debt} + ' kn'"></p>
+						<div th:each="e : ${creditorDebts}">
+							<p
+								th:text="'Cimeru ' + ${e.key.getCredentials()} +': ' + ${#numbers.formatDecimal(e.value.negate(), 1, 'COMMA', 2, 'POINT')}+ ' kn'"></p>
+						</div>
+
+
+						<form id="payoffForm" th:if="${groupExists}" method="POST"
+							th:action="@{/group/payoff}">
+							
+							<a class="btn btn-outline-warning" href="#" data-toggle="modal"
+								data-target="#payoffModal"> <i class="fa fa-money"
+								aria-hidden="true"></i> Isplati dugove
+							</a>
+							<div class="modal fade" id="payoffModal" role="dialog">
+								<div class="modal-dialog">
+									<div class="modal-content">
+										<div class="modal-header">
+											<h5 class="modal-title" th:text="'Isplata dugova'"></h5>
+										</div>
+										<div class="modal-body" th:each="e : ${creditorDebts}">
+											<p th:if="!${e.key==user}">Plaćaš cimeru: 
+												<b th:text="${e.key.getCredentials()}"></b>
+												<small th:text="${#numbers.formatDecimal(e.value.negate(), 1, 'COMMA', 2, 'POINT')} + ' kn'"></small>
+												
+											</p>
+
+										</div>
+										<div class="modal-footer">
+											<input type="submit" class="btn btn-outline-primary"
+												th:value="'Isplati dugove'" />
+											<button type="button" class="btn btn-default"
+												data-dismiss="modal" th:text="'Odustani'"></button>
+										</div>
+									</div>
+								</div>
+							</div>
+
+						</form>
+
+
+
+
 					</div>
 					<div th:if="!${hasDebt}">
-						<p th:text="'Cimeri ti duguju: ' + ${debt} + ' kn'"></p>
+						<p th:text="'Grupa ti duguje: ' + ${debt} + ' kn'"></p>
 					</div>
-					<br></br>
 					<p
 						th:text="'Potrošnja ovaj mjesec: ' + ${#numbers.formatDecimal(monthExpense, 1, 'COMMA', 2, 'POINT')}+ ' kn'"></p>
 					<h2>
@@ -147,9 +190,10 @@
 							class="nav-link"><i class="fa fa-plus" aria-hidden="true"></i>
 								<span>Dodaj cimera </span></a></li>
 					</ul>
+
 				</div>
 
-				<div id="accordion" role="tablist" aria-multiselectable="true"
+				<div id="accordion" role="tablist" aria-multiselectable="false"
 					class="col-md-9">
 					<div class="row">
 						<h1 class="h2 col-md-7">
@@ -197,10 +241,10 @@
 					</div>
 
 					<div class="card" th:each="e : ${billsMap}">
-						
-							<div class="badge badge-default"
-								th:text="${e.key} + ' ' + ${#dates.year(#dates.createNow())}"></div>
-				
+
+						<div class="badge badge-default"
+							th:text="${e.key} + ' ' + ${#dates.year(#dates.createNow())}"></div>
+
 						<div th:each="bill : ${e.value}">
 
 							<div class="card-header" role="tab" th:attr="id=${bill.title}">

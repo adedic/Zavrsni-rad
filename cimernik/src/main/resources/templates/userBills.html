@@ -28,9 +28,30 @@
 						th:if="!${isRoomate}">Moji troškovi</span> <span
 						th:if="${isRoomate}">Cimerovi troškovi</span></a>
 				</div>
+				<br></br>
+				
+				<div th:if="${creditorDebts} == null">
+					<p th:if="${isRoomate}"><span th:text="${user.getCredentials()}"> </span> nema dugova prema grupi.</p>
+					
+					<p th:if="!${isRoomate}">Nemaš dugova prema grupi.</p>
+				</div>
+				<div th:if="${hasDebt}">
+					<h3 th:if="${isRoomate}">Dužan je:</h3>
+					<h3 th:if="!${isRoomate}">Dužan si:</h3>
+					<p th:text="'Grupi: ' + ${debt.abs()} + ' kn'"></p>
+					<div th:each="e : ${creditorDebts}">
+						<p
+							th:text="'Cimeru ' + ${e.key.getCredentials()} +': ' + ${#numbers.formatDecimal(e.value.abs(), 1, 'COMMA', 2, 'POINT')}+ ' kn'"></p>
+					</div>
+				</div>
+				<div th:if="!${hasDebt}">
+					<p  th:if="!${isRoomate}" th:text="'Grupa ti duguje: ' + ${debt.abs()} + ' kn'"></p>
+					
+					<p  th:if="${isRoomate}" th:text="'Grupa mu duguje: ' + ${debt.abs()} + ' kn'"></p>
+				</div>
 			</div>
 
-			<div id="accordion" role="tablist" aria-multiselectable="true"
+			<div id="accordion" role="tablist" aria-multiselectable="false"
 				class="col-md-8">
 				<div class="row">
 					<h1 class="h2 col-md-9">
