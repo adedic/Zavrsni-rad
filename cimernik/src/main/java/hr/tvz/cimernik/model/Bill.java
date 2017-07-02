@@ -92,5 +92,17 @@ public class Bill implements Serializable {
 		this.description = description;
 		this.category = category;
 	}
+	
+	public Bill(User user, RoomateGroup roomateGroup, String title, BigDecimal price, Date dateCreated, Date lastUpdateDate,
+			String description, Category category) {
+		this.user = user;
+		this.roomateGroup = roomateGroup;
+		this.title = title;
+		this.price = price;
+		this.dateCreated = dateCreated;
+		this.lastUpdateDate = lastUpdateDate;
+		this.description = description;
+		this.category = category;
+	}
 
 }

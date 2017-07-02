@@ -39,8 +39,33 @@ public class BillCtrl {
 		billRepository.delete(billRepository.findOne(id));
 
 		Integer userId = userRepository.findOneByUsername(principal.getName()).getId();
-		System.out.println("userid" + userId.toString());
 		return "redirect:/group/bills/" + userId + "?deleteSuccess=true";
+	}
+	
+	@GetMapping("/editBill/{id}")//
+	String getEditBill(@PathVariable Integer id, Model model, Principal principal) {
+		if(userRepository.findOneByUsername(principal.getName()).getRoomateGroup() == null){
+			return "redirect:/";
+		}
+
+		return "redirect:/dashboard?editBillSuccess=true";
+	}
+	
+	@PostMapping("/group/editBill/{id}")
+	String editBill(@PathVariable Integer id, Model model, Principal principal, @ModelAttribute("bill") Bill bill) {
+		List<Category> categories = categoryRepository.findAll();
+		categories.remove(0);
+		model.addAttribute("categories", categories);
+	
+		User user = userRepository.findOneByUsername(principal.getName());
+		Bill oldBill = billRepository.findOne(id);
+		billRepository.delete(billRepository.findOne(id));
+		bill = new Bill(user, user.getRoomateGroup(), bill.getTitle(), bill.getPrice(), oldBill.getDateCreated(), new Date(),
+				bill.getDescription(), bill.getCategory());
+
+		billRepository.save(bill);
+		
+		return "redirect:/group/dashboard?billEdit=true";
 	}
 
 	@GetMapping("/bill/new")

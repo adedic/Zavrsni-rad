@@ -29,10 +29,13 @@
 						th:if="${isRoomate}">Cimerovi troškovi</span></a>
 				</div>
 				<br></br>
-				
+
 				<div th:if="${creditorDebts} == null">
-					<p th:if="${isRoomate}"><span th:text="${user.getCredentials()}"> </span> nema dugova prema grupi.</p>
-					
+					<p th:if="${isRoomate}">
+						<span th:text="${user.getCredentials()}"> </span> nema dugova
+						prema grupi.
+					</p>
+
 					<p th:if="!${isRoomate}">Nemaš dugova prema grupi.</p>
 				</div>
 				<div th:if="${hasDebt}">
@@ -45,9 +48,11 @@
 					</div>
 				</div>
 				<div th:if="!${hasDebt}">
-					<p  th:if="!${isRoomate}" th:text="'Grupa ti duguje: ' + ${debt.abs()} + ' kn'"></p>
-					
-					<p  th:if="${isRoomate}" th:text="'Grupa mu duguje: ' + ${debt.abs()} + ' kn'"></p>
+					<p th:if="!${isRoomate}"
+						th:text="'Grupa ti duguje: ' + ${debt.abs()} + ' kn'"></p>
+
+					<p th:if="${isRoomate}"
+						th:text="'Grupa mu duguje: ' + ${debt.abs()} + ' kn'"></p>
 				</div>
 			</div>
 
@@ -98,10 +103,35 @@
 											By <b th:text="${bill.user.username}"></b>
 										</p>
 									</div>
-									<div class="col-md-2" style="margin-top: 15px">
-										<a th:href="@{/deleteBill/{id}(id=${bill.id}) }"><i
-											class="fa fa-trash" aria-hidden="true"
-											style="font-size: 2em;"></i> </a>
+									<div class="row">
+										<div class="col-md-5" style="margin-top: 17px">
+
+											<form id="editBillForm" method="POST"
+												th:action="@{/group/editBill/{id}(id=${bill.id})}"
+												th:object="${bill}">
+												<a href="#" data-toggle="modal"
+													th:attr="data-target='#editBillModal'+${bill.id}"><i
+													class="fa fa-pencil-square-o" aria-hidden="true"
+													style="font-size: 2em;"></i> </a>
+
+
+												<div th:replace="fragments :: editBillModal"></div>
+											</form>
+										</div>
+										<div class="col-md-5" style="margin-top: 15px">
+											<form id="deleteBillForm" method="GET"
+												th:action="@{/group/deleteBill/{id}(id=${bill.id})}">
+
+												<a href="#" data-toggle="modal"
+													data-target="#deleteBillModal"> <i class="fa fa-trash"
+													aria-hidden="true" style="font-size: 2em;"></i>
+												</a>
+
+												<div th:replace="fragments :: deleteBillModal"></div>
+
+											</form>
+										</div>
+
 									</div>
 
 								</div>

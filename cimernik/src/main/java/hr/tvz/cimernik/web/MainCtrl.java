@@ -57,6 +57,11 @@ public final class MainCtrl {
 	String showUserBills(@PathVariable Integer id, Model model, Principal principal,
 			@RequestParam(value = "deleteSuccess", required = false) String deleteSuccess) {
 		User user = userRepository.findOne(id);
+		
+		model.addAttribute("bill", new Bill());
+		List<Category> categories = categoryRepository.findAll();
+		categories.remove(0);
+		model.addAttribute("categories", categories);
 
 		if (user.getRoomateGroup() == null) {
 			return "redirect:/";
@@ -338,11 +343,17 @@ public final class MainCtrl {
 			@RequestParam(value = "leaveSuccess", required = false) String leaveSuccess,
 			@RequestParam(value = "groupSuccess", required = false) String groupSuccess,
 			@RequestParam(value = "groupEdit", required = false) String groupEdit,
+			@RequestParam(value = "billEdit", required = false) String billEdit,
 			@RequestParam(value = "deleteSuccess", required = false) String deleteSuccess,
 			@RequestParam(value = "memberSuccess", required = false) String memberSuccess,
 			@RequestParam(value = "memberInvite", required = false) String memberInvite) {
 		
 		model.addAttribute("roomateGroup", new RoomateGroup());
+		model.addAttribute("bill", new Bill());
+		List<Category> categories = categoryRepository.findAll();
+		categories.remove(0);
+		model.addAttribute("categories", categories);
+		
 		
 		User user = userRepository.findOneByUsername(principal.getName());
 		model.addAttribute("user", user);
@@ -426,6 +437,8 @@ public final class MainCtrl {
 		model.addAttribute("payoffSuccess", payoffSuccess);
 		model.addAttribute("leaveSuccess", leaveSuccess);
 		model.addAttribute("groupEdit", groupEdit);
+
+		model.addAttribute("billEdit", billEdit);
 		model.addAttribute("groupSuccess", groupSuccess);
 		model.addAttribute("deleteSuccess", deleteSuccess);
 		model.addAttribute("memberSuccess", memberSuccess);

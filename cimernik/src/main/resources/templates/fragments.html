@@ -69,7 +69,8 @@
 
 
 	<th:block th:fragment="alertModal">
-		<div class="modal fade" id="myModal" role="dialog">
+		<div class="modal fade" id="myModal" role="dialog"
+			style="margin-top: 10vh">
 			<div class="modal-dialog">
 				<div class="modal-content">
 					<div class="modal-header">
@@ -79,37 +80,157 @@
 						<p th:text="${message}"></p>
 					</div>
 					<div class="modal-footer">
-						<input type="submit" class="btn btn-outline-primary"
-							th:value="${confirmLabel}" />
-						<button type="button" class="btn btn-outline-default"
-							data-dismiss="modal" th:text="${cancelLabel}"></button>
+						<input type="submit" style="cursor: pointer"
+							class="btn btn-outline-primary" th:value="${confirmLabel}" /> <a
+							href="#" class="btn btn-outline-warning" data-dismiss="modal"
+							th:text="${cancelLabel}"></a>
 					</div>
 				</div>
 			</div>
 		</div>
 
 	</th:block>
-	
+
 	<th:block th:fragment="payoffModal">
-		<div class="modal fade" id="payoffModal" role="dialog">
+		<form id="payoffForm" th:if="${groupExists}" method="POST"
+			th:action="@{/group/payoff}">
+
+			<a class="btn btn-outline-warning" href="#" data-toggle="modal"
+				data-target="#payoffModal"> <i class="fa fa-money"
+				aria-hidden="true"></i> Isplati dugove
+			</a>
+			<div class="modal fade" id="payoffModal" role="dialog"
+				style="margin-top: 10vh">
+				<div class="modal-dialog">
+					<div class="modal-content">
+						<div class="modal-header">
+							<h5 class="modal-title" th:text="'Isplata dugova'"></h5>
+						</div>
+						<div class="modal-body" th:each="e : ${creditorDebts}">
+							<p th:if="!${e.key==user}">
+								Plaćaš cimeru <b th:text="${e.key.getCredentials()}"></b> <small
+									th:text="${#numbers.formatDecimal(e.value.negate(), 1, 'COMMA', 2, 'POINT')} + ' kn'"></small>
+
+							</p>
+
+						</div>
+						<div class="modal-footer">
+							<input type="submit" style="cursor: pointer"
+								class="btn btn-outline-primary" th:value="'Isplati dugove'" />
+							<a href="#" class="btn btn-outline-warning" data-dismiss="modal"
+								th:text="'Odustani'"></a>
+						</div>
+					</div>
+				</div>
+			</div>
+
+		</form>
+
+	</th:block>
+	<th:block th:fragment="editBillModal">
+
+		<div class="modal fade" th:id="editBillModal+${bill.id}" role="dialog"
+			style="margin-top: 10vh">
 			<div class="modal-dialog">
 				<div class="modal-content">
 					<div class="modal-header">
-						<h5 class="modal-title" th:text="${header}"></h5>
+						<h5 class="modal-title" th:text="'Uređivanje računa'"></h5>
 					</div>
 					<div class="modal-body">
-						<p th:text="${message}"></p>
+						<div class="panel panel-default">
+							
+							<br></br>
+
+							<div class="panel-body">
+
+								<div class="col-xs-12 col-sm-7 col-md-7">
+									<div th:class="form-group"
+										th:classappend="${#fields.hasErrors('category')} ? has-danger : ''">
+										<label for="category">Kategorija: </label> <select
+											id="category" name="category"
+											class="form-control form-control-danger"
+											th:required="required" th:autofocus="autofocus">
+											<option th:each="c : ${categories}" th:value="${c.id}"
+												th:text="${c.description}" th:selected="${c.description==bill.category.description}"></option>
+										</select>
+										<div class="form-control-feedback"
+											th:if="${#fields.hasErrors('category')}"
+											th:errors="*{category}"></div>
+									</div>
+								</div>
+
+
+								<div class="col-xs-12 col-sm-7 col-md-7">
+									<div th:class="form-group"
+										th:classappend="${#fields.hasErrors('title')} ? has-danger : ''">
+										<label for="title">Naslov:</label> <input type="text"
+											class="form-control form-control-danger" th:required="required"
+											id="title" name="title" th:placeholder="'Naslov računa'" th:value="${bill.title}" />
+										<div class="form-control-feedback"
+											th:if="${#fields.hasErrors('title')}" th:errors="*{title}"></div>
+									</div>
+								</div>
+								<div class="col-xs-12 col-sm-7 col-md-7">
+									<div th:class="form-group"
+										th:classappend="${#fields.hasErrors('price')} ? has-danger : ''">
+										<label for="price">Cijena(kn):</label> <input type="number"
+											class="form-control form-control-danger" min="0" step="any"
+											th:value="${bill.price}" id="price" name="price" th:required="required" 
+											th:placeholder="'Trošak računa'"/>
+										<div class="form-control-feedback"
+											th:if="${#fields.hasErrors('price')}" th:errors="*{price}"></div>
+									</div>
+								</div>
+								<div class="col-xs-12 col-sm-7 col-md-7">
+									<div th:class="form-group"
+										th:classappend="${#fields.hasErrors('description')} ? has-danger : ''">
+										<label for="description">Opis obaveze/troška:</label> <input
+											type="text" class="form-control form-control-danger"
+											th:value="${bill.description}" id="description" name="description"
+											th:placeholder="'Opis računa'" />
+										<div class="form-control-feedback"
+											th:if="${#fields.hasErrors('description')}"
+											th:errors="*{description}"></div>
+									</div>
+								</div>
+							</div>
+						</div>
+
 					</div>
 					<div class="modal-footer">
-						<input type="submit" class="btn btn-outline-primary"
-							th:value="${confirmLabel}" />
-						<button type="button" class="btn btn-outline-default"
-							data-dismiss="modal" th:text="${cancelLabel}"></button>
+						<input type="submit" style="cursor: pointer"
+							class="btn btn-outline-primary" th:value="'Spremi'" /> <a
+							href="#" class="btn btn-outline-warning" data-dismiss="modal"
+							th:text="'Odustani'"></a>
 					</div>
 				</div>
 			</div>
 		</div>
 
+
+
+	</th:block>
+	<th:block th:fragment="deleteBillModal">
+
+		<div class="modal fade" id="deleteBillModal" role="dialog"
+			style="margin-top: 10vh">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h5 class="modal-title" th:text="'Brisanje računa'"></h5>
+					</div>
+					<div class="modal-body">
+						<p th:text="'Jeste li sigurni da želite obrisati račun?'"></p>
+					</div>
+					<div class="modal-footer">
+						<input type="submit" style="cursor: pointer"
+							class="btn btn-outline-primary" th:value="'Obriši'" /> <a
+							href="#" class="btn btn-outline-warning" data-dismiss="modal"
+							th:text="'Odustani'"></a>
+					</div>
+				</div>
+			</div>
+		</div>
 	</th:block>
 
 

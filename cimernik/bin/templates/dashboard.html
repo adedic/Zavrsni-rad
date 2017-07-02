@@ -111,6 +111,12 @@
 					Promjenjen naziv grupe.
 				</div>
 			</div>
+			<div th:if="${billEdit !=null} ">
+				<div class="alert alert-warning alert-dismissable">
+					<a href="#" class="close" data-dismiss="alert" aria-label="close">×</a>
+					Izmjenjen račun.
+				</div>
+			</div>
 			<div th:if="${deleteSuccess}">
 				<div class="alert alert-success alert-dismissable">
 					<a href="#" class="close" data-dismiss="alert" aria-label="close">×</a>
@@ -140,39 +146,8 @@
 								th:text="'Cimeru ' + ${e.key.getCredentials()} +': ' + ${#numbers.formatDecimal(e.value.negate(), 1, 'COMMA', 2, 'POINT')}+ ' kn'"></p>
 						</div>
 
+						<div th:replace="fragments :: payoffModal"></div>
 
-						<form id="payoffForm" th:if="${groupExists}" method="POST"
-							th:action="@{/group/payoff}">
-
-							<a class="btn btn-outline-warning" href="#" data-toggle="modal"
-								data-target="#payoffModal"> <i class="fa fa-money"
-								aria-hidden="true"></i> Isplati dugove
-							</a>
-							<div class="modal fade" id="payoffModal" role="dialog">
-								<div class="modal-dialog">
-									<div class="modal-content">
-										<div class="modal-header">
-											<h5 class="modal-title" th:text="'Isplata dugova'"></h5>
-										</div>
-										<div class="modal-body" th:each="e : ${creditorDebts}">
-											<p th:if="!${e.key==user}">
-												Plaćaš cimeru: <b th:text="${e.key.getCredentials()}"></b> <small
-													th:text="${#numbers.formatDecimal(e.value.negate(), 1, 'COMMA', 2, 'POINT')} + ' kn'"></small>
-
-											</p>
-
-										</div>
-										<div class="modal-footer">
-											<input type="submit" class="btn btn-outline-primary"
-												th:value="'Isplati dugove'" />
-											<button type="button" class="btn btn-default"
-												data-dismiss="modal" th:text="'Odustani'"></button>
-										</div>
-									</div>
-								</div>
-							</div>
-
-						</form>
 
 
 
@@ -208,13 +183,14 @@
 								<h1 class="h2">
 									<small>Svi troškovi grupe </small><b th:text="${group.name}"></b>
 									<a href="#" data-toggle="modal" data-target="#editGroupModal">
-										<i class="fa fa-pencil-square-o" aria-hidden="true" style="font-size: 1em;"></i>
+										<i class="fa fa-pencil-square-o" aria-hidden="true"
+										style="font-size: 1em;"></i>
 									</a>
 								</h1>
 								<form id="editGroupForm" th:if="${groupExists}" method="POST"
-									th:action="@{/group/edit//{id}(id=${group.id})}"
+									th:action="@{/group/edit/{id}(id=${group.id})}"
 									th:object="${roomateGroup}">
-									
+
 									<div class="modal fade" id="editGroupModal" role="dialog">
 										<div class="modal-dialog">
 											<div class="modal-content">
@@ -225,9 +201,9 @@
 													<div class="col-xs-12 col-sm-6 col-md-6">
 														<div th:class="form-group"
 															th:classappend="${#fields.hasErrors('name')} ? has-danger : ''">
-															<label for="name">Novi naziv grupe:</label> <input type="text"
-																class="form-control form-control-danger"
-																th:field="*{name}" th:autofocus="autofocus" id="name"
+															<label for="name">Promijenite naziv grupe:</label> <input
+																type="text" class="form-control form-control-danger"
+																name="name" th:autofocus="autofocus" id="name" th:value="${group.name}"
 																th:required="required" th:placeholder="'Ime grupe'" />
 															<div class="form-control-feedback"
 																th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></div>
@@ -236,10 +212,10 @@
 
 												</div>
 												<div class="modal-footer">
-													<input type="submit" class="btn btn-outline-primary"
-														th:value="'Spremi'" />
-													<button type="button" class="btn btn-default"
-														data-dismiss="modal" th:text="'Odustani'"></button>
+													<input style="cursor: pointer" type="submit"
+														class="btn btn-outline-primary" th:value="'Spremi'" /> <a
+														href="#" class="btn btn-outline-warning"
+														data-dismiss="modal" th:text="'Odustani'"></a>
 												</div>
 											</div>
 										</div>
@@ -321,11 +297,39 @@
 													By <b th:text="${bill.user.username}"></b>
 												</p>
 											</div>
-											<div th:if="${bill.user == user}" class="col-md-2"
-												style="margin-top: 15px">
-												<a th:href="@{/group/deleteBill/{id}(id=${bill.id}) }"><i
-													class="fa fa-trash" aria-hidden="true"
-													style="font-size: 2em;"></i> </a>
+											<div th:if="${bill.user == user}">
+												<div class="row">
+													<div class="col-md-5" style="margin-top: 17px">
+
+														<form id="editBillForm" method="POST"
+															th:action="@{/group/editBill/{id}(id=${bill.id})}"
+															th:object="${bill}">
+															<a href="#" data-toggle="modal"
+																th:attr="data-target='#editBillModal'+${bill.id}"><i
+																class="fa fa-pencil-square-o" aria-hidden="true"
+																style="font-size: 2em;"></i> </a>
+
+
+															<div th:replace="fragments :: editBillModal"></div>
+														</form>
+													</div>
+													<div class="col-md-5" style="margin-top: 15px">
+														<form id="deleteBillForm" method="GET"
+															th:action="@{/group/deleteBill/{id}(id=${bill.id})}">
+
+															<a href="#" data-toggle="modal"
+																data-target="#deleteBillModal"> <i
+																class="fa fa-trash" aria-hidden="true"
+																style="font-size: 2em;"></i>
+															</a>
+
+															<div th:replace="fragments :: deleteBillModal"></div>
+
+														</form>
+													</div>
+
+												</div>
+
 											</div>
 										</div>
 									</div>
