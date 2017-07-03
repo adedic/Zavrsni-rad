@@ -1,5 +1,5 @@
 
-INSERT INTO roomate_group(id, name, date_created) VALUES (1, 'Naj cimeri ikad', CURRENT_DATE()-2);
+INSERT INTO roomate_group(id, name, date_created) VALUES (1, 'Naj cimeri ikad', CURRENT_DATE()-40);
 
 INSERT INTO roomate_group(id, name, date_created) VALUES (2, 'Košarka', CURRENT_DATE()-20);
 

@@ -103,7 +103,7 @@
 											By <b th:text="${bill.user.username}"></b>
 										</p>
 									</div>
-									<div class="row">
+									<div class="row" th:if="!${isRoomate}">
 										<div class="col-md-5" style="margin-top: 17px">
 
 											<form id="editBillForm" method="POST"
