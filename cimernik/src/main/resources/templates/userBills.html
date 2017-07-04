@@ -23,7 +23,7 @@
 				<div class="list-group">
 					<a th:href="@{/group/dashboard}"
 						class="list-group-item list-group-item-action"> Troškovi grupe</a>
-					<a th:href="@{/group/bills/{id}(id=${user.id})}"
+					<a th:href="@{/group/bills/{id}(id=${rUser.id})}"
 						class="list-group-item list-group-item-action active"> <span
 						th:if="!${isRoomate}">Moji troškovi</span> <span
 						th:if="${isRoomate}">Cimerovi troškovi</span></a>
@@ -32,7 +32,7 @@
 
 				<div th:if="${creditorDebts} == null">
 					<p th:if="${isRoomate}">
-						<span th:text="${user.getCredentials()}"> </span> nema dugova
+						<span th:text="${rUser.getCredentials()}"> </span> nema dugova
 						prema grupi.
 					</p>
 
@@ -60,7 +60,7 @@
 				class="col-md-8">
 				<div class="row">
 					<h1 class="h2 col-md-9">
-						<small th:text="${user.getCredentials()}"> </small>
+						<a th:href="@{/user/details/{id}(id=${rUser.id})}"><small th:text="${rUser.getCredentials()}"> </small></a>
 					</h1>
 					<div th:if="!${isRoomate}">
 						<a th:href="@{/bill/new}" class="btn btn-outline-success">
@@ -123,7 +123,7 @@
 												th:action="@{/group/deleteBill/{id}(id=${bill.id})}">
 
 												<a href="#" data-toggle="modal"
-													data-target="#deleteBillModal"> <i class="fa fa-trash"
+													th:attr="data-target='#deleteBillModal'+${bill.id}"> <i class="fa fa-trash"
 													aria-hidden="true" style="font-size: 2em;"></i>
 												</a>
 
